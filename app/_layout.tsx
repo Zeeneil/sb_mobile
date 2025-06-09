@@ -5,6 +5,10 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { View } from 'react-native';
+import '../index.css';
+import { AuthProvider } from '@/hooks/authContext';
+import { useAuth } from '@/hooks/authContext';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -23,7 +27,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SourceSans3: require('../assets/fonts/SourceSans3-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -42,16 +46,57 @@ export default function RootLayout() {
     return null;
   }
 
-  return <RootLayoutNav />;
+  return (
+    <AuthProvider>
+      <RootLayoutNav />
+    </AuthProvider>
+  );
 }
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack screenOptions={{headerShown: false}}>
+        <Stack.Screen
+          name="loginPage"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="signInPage"
+          options={{
+            headerShown: true,
+            headerTitle: 'Sign-In',
+            headerTitleStyle: { color: '#fff' },
+            headerTintColor: '#2C3E50',
+            headerBackground: () => <View style={{ flex: 1, backgroundColor: '#fff' }} />,
+          }}
+        />
+        <Stack.Screen
+          name="signUpPage"
+          options={{
+            headerShown: true,
+            headerTitle: 'Sign-Up',
+            headerTitleStyle: { color: '#fff' },
+            headerTintColor: '#2C3E50',
+            headerBackground: () => <View style={{ flex: 1, backgroundColor: '#fff' }} />,
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)"
+          options={{ headerShown: false, 
+            // Hide if not logged in
+            // You can use a custom prop or redirect logic in the screen itself
+            // Example: pass a prop to indicate authentication status
+            // Or use a redirect in the (tabs) screen if not authenticated
+          }}
+        />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
