@@ -1,231 +1,328 @@
-import { StyleSheet, TouchableOpacity } from 'react-native';
-import { auth } from '../../firebase/firebase';
+import { Text, View, ScrollView, Image, ActivityIndicator, RefreshControl, useWindowDimensions, BackHandler } from 'react-native';
+import * as ScreenOrientation from 'expo-screen-orientation';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TouchableOpacity } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import EditScreenInfo from '@/components/EditScreenInfo';
-import { Text, View } from '@/components/Themed';
-import { ScrollView, Image } from 'react-native';
+import { useAuth } from '@/hooks/authContext';
+import { imageSrc } from '@/Icons/icons';
+import { useLessonsState } from '@/hooks/useLessonsState';
+import { useClassContext } from '@/hooks/classContext';
+import { useQuizContext } from '@/hooks/quizContext';
+import { useQuizzesState } from '@/hooks/useQuizzesState';
+import { formatUserDate } from '@/utils/helpers';
+import { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import { doGetClassNameById } from '@/api/functions';
+import { StatusBar } from 'expo-status-bar';
+import { ProtectedScreen } from '@/routes/ProtectedScreen';
+import DialogComponent from '@/components/dialogComponent';
 
 export default function TabOneScreen() {
-
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
+  const { currentUser, classId } = useAuth();
+  const { state: LessonState, refreshOpenLessons } = useLessonsState();
+  const { setSelectedLesson, setClassName, setLastViewedLesson, lastViewedLesson } = useClassContext();
+  const { setSelectedQuiz } = useQuizContext();
+  const { state: QuizState, lessons, nextQuiz } = useQuizzesState();
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [visible, setVisible] = useState<boolean>(false);
+  
+  const showDialog = () => setVisible(true);
+  const hideDialog = () => setVisible(false);
 
-  const handleSignOut = () => {
-    auth.signOut();
-    router.push({
-      pathname: '/loginPage',
-    });
-  }
+  useFocusEffect(
+    useCallback(() => {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT);
+      return undefined;
+    }, [])
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        showDialog();
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => {
+        subscription.remove();
+      };
+    }, [])
+  );
+
+  useEffect(() => {
+    const fetchClassName = async () => {
+      if (classId) {
+        const response = await doGetClassNameById(classId) as any;
+        setClassName(response?.className);
+      }
+    };
+    fetchClassName();
+  }, [classId]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refreshOpenLessons();
+    setRefreshing(false);
+  };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#F8F9FB' }} contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
-      <TouchableOpacity
-        onPress={() => handleSignOut()}
-        className='bg-[#2C3E50] rounded-lg px-10 py-5'
-      >
-        <Text lightColor="#eee">Sign out</Text>
-      </TouchableOpacity>
-      {/* Header */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <View>
-          <Text style={styles.greeting}>Kumusta, Zyron!</Text>
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12 }}>
-          {/* Replace with your icons */}
-          <View style={styles.iconPlaceholder} />
-          <View style={styles.iconPlaceholder} />
-        </View>
-      </View>
-
-      {/* Banner/Notification */}
-      <View style={styles.banner}>
-        <Text style={styles.bannerText}>Tapusin ang iyong pagsusulit ngayon!</Text>
-      </View>
-
-      {/* Aking Aralin */}
-      <Text style={styles.sectionTitle}>Aking Aralin</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 12 }}>
-        {/* <Image source={require('@/assets/alphabet.png')} style={styles.lessonCard} />
-        <Image source={require('@/assets/nouns.png')} style={styles.lessonCard} />
-        <Image source={require('@/assets/other.png')} style={styles.lessonCard} /> */}
-      </ScrollView>
-      <TouchableOpacity style={styles.ctaButton}>
-        <Text style={styles.ctaButtonText}>Ipagpatuloy ang Pagkatuto</Text>
-      </TouchableOpacity>
-
-      {/* Paparating na pagsusulit */}
-      <Text style={styles.sectionTitle}>Paparating na pagsusulit</Text>
-      <View style={styles.quizCard}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-          {/* Replace with your icon */}
-          <View style={styles.quizIcon} />
-          <Text style={styles.quizAlert}>Available na ang bagong quiz!</Text>
-        </View>
-        <Text style={styles.quizLabel}>Pamagat: <Text style={{ fontWeight: 'bold' }}>“Filipino Basics”</Text></Text>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-          <Text style={styles.quizDate}>Simula: March 6, 2025</Text>
-          <TouchableOpacity>
-            <Text style={styles.quizDetail}>Detalye</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Mga natapos na aralin */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 24 }}>
-        <Text style={styles.sectionTitle}>Mga natapos na aralin</Text>
-        <TouchableOpacity>
-          <Text style={styles.seeAll}>Tingnan ang lahat</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 12 }}>
-        <View style={styles.completedCard}>
-          {/* <Image source={require('@/assets/images/alphabet.jfif')} style={styles.completedImage} /> */}
-          <Text style={styles.completedLabel}>Pagkilala sa Alpabeto</Text>
-          {/* Add star icon at top right if needed */}
-        </View>
-        <View style={styles.completedCard}>
-          {/* <Image source={require('@/assets/nouns.png')} style={styles.completedImage} /> */}
-          <Text style={styles.completedLabel}>Pangngalan at Pandiwa</Text>
-        </View>
-        <View style={styles.completedCard}>
-          {/* <Image source={require('@/assets/other.png')} style={styles.completedImage} /> */}
-          <Text style={styles.completedLabel}>Tamang Bigkas at Diin</Text>
-        </View>
-        <View style={styles.completedCard}>
-          {/* <Image source={require('@/assets/alphabet.png')} style={styles.completedImage} /> */}
-          <Text style={styles.completedLabel}>Pagkilala sa Alpabeto</Text>
-        </View>
-      </View>
-    </ScrollView>
+    <ProtectedScreen requireVerifiedEmail={true}>
+      <SafeAreaView style={{
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: '#2C3E50',
+      }}>
+        <StatusBar style="light" />
+        <Image
+          source={imageSrc.lessonbg}
+          style={{ position: 'absolute', opacity: 0.3, width: width, height: height, left: 0 }}
+          resizeMode='stretch'
+        />
+        {(LessonState.isLoading && QuizState.isLoading) ? (
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+            <ActivityIndicator size="large" color="#FFA600" />
+          </View>
+        ) : (
+          <ScrollView
+            style={{ paddingVertical: 20 }}
+            contentContainerStyle={{ paddingBottom: 140 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#2C3E50']}
+                tintColor="#2C3E50"
+              />
+            }
+          >
+            <View style={{
+              position: 'relative',
+              display: 'flex',
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 16,
+              paddingHorizontal: 20,
+            }}>
+              <View style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 16 }}>
+                <Text  style={{
+                  fontSize: 24,
+                  lineHeight: 32,
+                  fontWeight: '900',
+                  fontFamily: 'ChalkBoard',
+                  color: '#fff',
+                }}>Kumusta, {currentUser?.displayName?.split(' ')[0]}!</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 12 }}>
+                <TouchableOpacity 
+                  onPress={() => router.navigate('/leaderboardSelection')}
+                >
+                  <Image source={imageSrc.leaderboard} style={{
+                    width: 40,
+                    height: 40,
+                    resizeMode: 'contain',
+                  }} />
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  onPress={() => router.navigate('/notification')}
+                >
+                  <Image source={imageSrc.bell} style={{
+                    width: 40,
+                    height: 40,
+                    resizeMode: 'contain',
+                  }} />
+                </TouchableOpacity>
+              </View>
+            </View>
+            {/* Aking Aralin */}
+            {LessonState.openLessons.length > 0 && (
+              <Text style={{
+                fontSize: 18,
+                lineHeight: 24,
+                fontWeight: '900',
+                textAlign: 'center',
+                marginBottom: 4,
+                color: '#fff',
+              }}>Iyong Aralin</Text>
+            )}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={{
+                paddingVertical: 10,
+                paddingHorizontal: 20,
+                marginBottom: 5,
+              }}
+              contentContainerStyle={[{ flex: LessonState.openLessons.length > 0 ? 0 : 1, paddingRight: 16, alignItems: 'center', justifyContent: 'center' }]}
+            >
+              {LessonState.openLessons.length > 0 ? (
+                LessonState.openLessons.map((lesson: any, idx: number) => (
+                  <TouchableOpacity
+                    key={lesson.id || idx}
+                    style={{ 
+                      width: 200,
+                      height: 120,
+                      display: 'flex',
+                      backgroundColor: '#fff',
+                      borderRadius: 16,
+                      marginRight: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      elevation: 8,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.25,
+                      shadowRadius: 8,
+                      overflow: 'hidden',
+                    }}
+                    onPress={() => {
+                      setSelectedLesson(lesson);
+                      setLastViewedLesson(lesson);
+                      router.navigate('/lessons/modal');
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', flex: 1, width: '100%', padding: 12, gap: 12, backgroundColor: '#FFA600' }}>
+                      <Image source={imageSrc.book} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
+                      <Text className='line-clamp-2' style={{
+                        width: '70%',
+                        fontSize: 14,
+                        lineHeight: 20,
+                        fontWeight: '900',
+                        color: '#2C3E50',
+                      }}>
+                        Aralin {lesson.aralinNumero} - {lesson.aralinPamagat}
+                      </Text>
+                    </View>
+                    <Text numberOfLines={2} style={{
+                      flex: 1,
+                      fontWeight: '500',
+                      padding: 12,
+                      fontSize: 12,
+                      lineHeight: 15,
+                      color: '#333',
+                    }}>
+                      {lesson.aralinPaglalarawan || "Walang deskripsyon"}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 10 }}>
+                  <Text style={{ fontSize: 20, lineHeight: 32, fontWeight: 'bold', fontStyle: 'italic', color: '#ddd' }}>Walang pang binuksang aralin.</Text>
+                </View>
+              )}
+            </ScrollView>
+            <View style={{ paddingHorizontal: 20 }}>
+              <TouchableOpacity 
+                style={{
+                  backgroundColor: '#FFA600',
+                  borderRadius: 14,
+                  paddingVertical: 20,
+                  paddingHorizontal: 20,
+                  alignItems: 'center',
+                  marginVertical: 10,
+                  elevation: 5,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  overflow: 'hidden',
+                }}
+                onPress={() => {
+                  if (lastViewedLesson) {
+                    setSelectedLesson(lastViewedLesson);
+                    router.navigate('/lessons/modal');
+                  } else {
+                    router.navigate('/(tabs)/two');
+                  }
+                }}
+              >
+                <Image source={imageSrc.bookgirl} style={{ position: 'absolute', left: 0, bottom: 0, width: 60, height: 60, resizeMode: 'contain' }} />
+                <Text style={{
+                  color: '#2C3E50',
+                  fontWeight: 'bold',
+                  fontSize: lastViewedLesson ? 20 : 24,
+                }}>{lastViewedLesson ? "Ipagpatuloy ang pag-aaral" : "Simulan ang pag-aaral"}</Text>
+                <Image source={imageSrc.colorboy} style={{ position: 'absolute', right: 0, bottom: 0, width: 60, height: 60, resizeMode: 'contain' }} />
+              </TouchableOpacity>
+              {lessons.length > 0 && nextQuiz ? (
+                <>
+                  <Text style={{
+                    fontWeight: '900',
+                    fontSize: 16,
+                    lineHeight: 24,
+                    textAlign: 'center',
+                    marginTop: 8,
+                    color: '#fff',
+                  }}>Susunod na Pagsusulit</Text>
+                  <TouchableOpacity style={{
+                    position: 'relative',
+                    flexDirection: 'row',
+                    backgroundColor: '#FFA600',
+                    borderRadius: 16,
+                    paddingVertical: 16,
+                    marginTop: 8,
+                    elevation: 4,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 8,
+                    overflow: 'hidden',
+                  }}
+                    onPress={() => {
+                      setSelectedQuiz(nextQuiz?.quiz);
+                      router.navigate('/TakeSeatworkQuiz');
+                      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE);
+                    }}
+                  >
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                        <View style={{ flexDirection: 'row', backgroundColor: '#fff', borderTopRightRadius: 8, borderBottomRightRadius: 8, paddingVertical: 6, paddingHorizontal: 12, alignItems: 'center', marginRight: 8 }}>
+                          <MaterialIcons name="date-range" size={24} color="#2C3E50" style={{ marginRight: 8 }} />
+                          <Text style={{ color: '#2C3E50', fontWeight: '900', fontSize: 14, marginRight: 8 }}>
+                            {formatUserDate(nextQuiz.quiz.createdAt)}
+                          </Text>
+                        </View>
+                        <View style={{ backgroundColor: '#dcfce7', borderRadius: 4, paddingHorizontal: 8, paddingVertical: 4 }}>
+                          <Text style={{ color: '#16a34a', fontWeight: '900', fontSize: 14 }}>Na-unlock</Text>
+                        </View>
+                      </View>
+                      <View style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 30, alignItems: 'center', gap: 8 }}>
+                        <Text style={{ color: '#2C3E50', fontSize: 16, fontWeight: '600' }}>Pamagat: </Text>
+                        <Text style={{ color: '#2C3E50', fontSize: 24, fontWeight: '900' }} numberOfLines={2}>{nextQuiz.quiz.category}</Text>
+                      </View>
+                    </View>
+                    <View style={{ position: 'absolute', right: 65, top: 65, alignItems: 'center' }} >
+                      <Text style={{ color: '#2C3E50', fontSize: 16, fontWeight: '900' }}>Simulan</Text>
+                    </View>
+                    <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100, resizeMode: 'contain' }} />
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 20 }}>
+                  <Text style={{ fontSize: 24, lineHeight: 32, fontWeight: 'bold', fontStyle: 'italic', color: '#ddd' }}>Walang na-unlock na pagsusulit.</Text>
+                </View>
+              )}
+              <View style={{ marginTop: 20, alignItems: 'center', justifyContent: 'center' }}>
+                <Image source={imageSrc.lesson} style={{ width: '100%', height: 250, resizeMode: 'contain', alignSelf: 'center'}} />
+              </View>
+            </View>
+          </ScrollView>
+        )}
+        <DialogComponent
+          icon="alert"
+          title="Confirm Exit"
+          content="Are you sure you want to exit the app?"
+          visible={visible}
+          hideDialog={hideDialog}
+          handleConfirm={() => BackHandler.exitApp()}
+        />
+      </SafeAreaView>
+    </ProtectedScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: '80%',
-  },
-  greeting: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  iconPlaceholder: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: '#E5E7EB',
-  },
-  banner: {
-    backgroundColor: '#E3F0FF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    alignSelf: 'flex-start',
-    marginBottom: 18,
-  },
-  bannerText: {
-    color: '#2176FF',
-    fontWeight: '600',
-    fontSize: 13,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 8,
-    marginBottom: 4,
-  },
-  lessonCard: {
-    width: 140,
-    height: 90,
-    borderRadius: 16,
-    marginRight: 12,
-    backgroundColor: '#fff',
-  },
-  ctaButton: {
-    backgroundColor: '#2C3E50',
-    borderRadius: 24,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginVertical: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  ctaButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  quizCard: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    marginVertical: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  quizIcon: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    backgroundColor: '#FFD700',
-    marginRight: 6,
-  },
-  quizAlert: {
-    color: '#FF9900',
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
-  quizLabel: {
-    fontSize: 13,
-    marginBottom: 2,
-  },
-  quizDate: {
-    fontSize: 12,
-    color: '#888',
-  },
-  quizDetail: {
-    fontSize: 12,
-    color: '#2176FF',
-    fontWeight: 'bold',
-  },
-  seeAll: {
-    color: '#2176FF',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  completedCard: {
-    width: 140,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    marginBottom: 12,
-    alignItems: 'center',
-    padding: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  completedImage: {
-    width: 120,
-    height: 60,
-    borderRadius: 12,
-    marginBottom: 6,
-  },
-  completedLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-});
