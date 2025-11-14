@@ -81,7 +81,8 @@ const LeaderboardSelection = memo(() => {
                             <Image
                                 key={index}
                                 source={imageSrc || ""}
-                                style={{ width: 24, height: 24, resizeMode: 'contain', marginLeft: index > 0 ? -8 : 0 }}
+                                style={{ width: 24, height: 24, marginLeft: index > 0 ? -8 : 0 }}
+                                resizeMode='contain'
                             />
                         ))}
                     </View>

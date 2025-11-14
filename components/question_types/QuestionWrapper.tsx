@@ -9,7 +9,7 @@ import { MotiView } from "moti";
 import useAudioQueue from "@/hooks/useAudioQueue";
 import { buildJobsFromText } from "@/utils/helpers";
 import { imageSrc } from "@/Icons/icons";
-
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 interface QuestionWrapperProps {
   question: any;
   answers: { [key: string]: any };
@@ -36,7 +36,11 @@ interface QuestionWrapperProps {
   onSyllableReorder: (newOrder: number[]) => void;
   getSyllableStyle: (syllableIdx: number, isInAnswer: boolean) => ViewStyle;
   audioQueue: ReturnType<typeof useAudioQueue>;
+  visible: boolean;
 }
+
+const WalkthroughableView = walkthroughable(View);
+const WalkthroughableText = walkthroughable(Text);
 
 const QuestionWrapper = memo(({
   question,
@@ -63,7 +67,8 @@ const QuestionWrapper = memo(({
   onSyllableRemove,
   onSyllableReorder,
   getSyllableStyle,
-  audioQueue
+  audioQueue,
+  visible,
 }: QuestionWrapperProps) => {
   const [showSpeed, setShowSpeed] = useState<boolean>(false);
   const { pause, resume, stop, isPlaying, isPaused } = audioQueue;
@@ -125,6 +130,7 @@ const QuestionWrapper = memo(({
             renderSpeaker={renderSpeaker}
             setShowSpeed={setShowSpeed}
             showSpeed={showSpeed}
+            visible={visible}
           />
         );
       case 'identification':
@@ -235,23 +241,37 @@ const QuestionWrapper = memo(({
     >
       <View style={{ flex: 1 }}>
         {question.type !== 'multiple' && question?.question && (
-          <View style={{ 
+          <WalkthroughableView style={{
             flexDirection: 'row', 
             justifyContent: 'center', 
             alignItems: 'center', 
             gap: 12,
             marginBottom: 8
           }}>
-            <Text style={{
-              fontWeight: '900',
-              color: '#2c3e50',
-              textAlign: 'center',
-              fontSize: 14
-            }}>
-              {question.question}
-            </Text>
-            {renderSpeaker()}
-          </View>
+            <CopilotStep
+              name="quiz-question"
+              order={5}
+              text="Makikita mo dito ang tanong na kailangan mong sagutin. Basahin ito nang mabuti!"
+            >
+              <WalkthroughableText style={{
+                fontWeight: '900',
+                color: '#2c3e50',
+                textAlign: 'center',
+                fontSize: 14
+              }}>
+                {question.question}
+              </WalkthroughableText>
+            </CopilotStep>
+            <CopilotStep
+              name="quiz-question-speaker"
+              order={7}
+              text="Pindutin ito at pumili ng isang opsyon para marinig ang tanong. Makinig nang mabuti!"
+            >
+              <WalkthroughableView>
+                {renderSpeaker()}
+              </WalkthroughableView>
+            </CopilotStep>
+          </WalkthroughableView>
         )}
         {renderQuestionType}
       </View>

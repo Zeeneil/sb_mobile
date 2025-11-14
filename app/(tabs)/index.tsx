@@ -25,7 +25,7 @@ export default function TabOneScreen() {
   const { state: LessonState, refreshOpenLessons } = useLessonsState();
   const { setSelectedLesson, setClassName, setLastViewedLesson, lastViewedLesson } = useClassContext();
   const { setSelectedQuiz } = useQuizContext();
-  const { state: QuizState, lessons, nextQuiz } = useQuizzesState();
+  const { state: QuizState, lessons, nextQuiz, refreshQuizzes } = useQuizzesState();
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [visible, setVisible] = useState<boolean>(false);
   
@@ -65,6 +65,7 @@ export default function TabOneScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await refreshOpenLessons();
+    await refreshQuizzes();
     setRefreshing(false);
   };
 
@@ -187,7 +188,7 @@ export default function TabOneScreen() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', flex: 1, width: '100%', padding: 12, gap: 12, backgroundColor: '#FFA600' }}>
-                      <Image source={imageSrc.book} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
+                      <Image source={imageSrc.book} style={{ width: 40, height: 40 }} resizeMode='contain' />
                       <Text className='line-clamp-2' style={{
                         width: '70%',
                         fontSize: 14,
@@ -241,13 +242,13 @@ export default function TabOneScreen() {
                   }
                 }}
               >
-                <Image source={imageSrc.bookgirl} style={{ position: 'absolute', left: 0, bottom: 0, width: 60, height: 60, resizeMode: 'contain' }} />
+                <Image source={imageSrc.bookgirl} style={{ position: 'absolute', left: 0, bottom: 0, width: 40, height: 50 }} resizeMode='contain' />
                 <Text style={{
                   color: '#2C3E50',
                   fontWeight: 'bold',
                   fontSize: lastViewedLesson ? 20 : 24,
                 }}>{lastViewedLesson ? "Ipagpatuloy ang pag-aaral" : "Simulan ang pag-aaral"}</Text>
-                <Image source={imageSrc.colorboy} style={{ position: 'absolute', right: 0, bottom: 0, width: 60, height: 60, resizeMode: 'contain' }} />
+                <Image source={imageSrc.colorboy} style={{ position: 'absolute', right: 0, bottom: 0, width: 50, height: 40 }} resizeMode='contain' />
               </TouchableOpacity>
               {lessons.length > 0 && nextQuiz ? (
                 <>
@@ -299,7 +300,7 @@ export default function TabOneScreen() {
                     <View style={{ position: 'absolute', right: 65, top: 65, alignItems: 'center' }} >
                       <Text style={{ color: '#2C3E50', fontSize: 16, fontWeight: '900' }}>Simulan</Text>
                     </View>
-                    <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100, resizeMode: 'contain' }} />
+                    <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100 }} resizeMode='contain' />
                   </TouchableOpacity>
                 </>
               ) : (
@@ -308,7 +309,7 @@ export default function TabOneScreen() {
                 </View>
               )}
               <View style={{ marginTop: 20, alignItems: 'center', justifyContent: 'center' }}>
-                <Image source={imageSrc.lesson} style={{ width: '100%', height: 250, resizeMode: 'contain', alignSelf: 'center'}} />
+                <Image source={imageSrc.lesson} style={{ width: '100%', height: 250, alignSelf: 'center'}} resizeMode='contain' />
               </View>
             </View>
           </ScrollView>

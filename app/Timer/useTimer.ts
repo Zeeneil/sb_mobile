@@ -8,9 +8,10 @@ interface UseTimerProps {
 }
 
 const useTimer = ({ timer, isActive, onTick, onTimeout }: UseTimerProps) => {
-  const intervalRef = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onTickRef = useRef(onTick);
   const onTimeoutRef = useRef(onTimeout);
+
   onTickRef.current = onTick;
   onTimeoutRef.current = onTimeout;
 
@@ -22,22 +23,20 @@ const useTimer = ({ timer, isActive, onTick, onTimeout }: UseTimerProps) => {
   }, []);
   
   useEffect(() => {
+    clearTimer();
     if (!isActive) {
-      clearTimer();
       return;
     }
     if (timer <= 0) {
-      clearTimer();
       onTimeoutRef.current();
       return;
     }
-    clearTimer();
     intervalRef.current = setInterval(() => {
       onTickRef.current();
     }, 1000);
 
     return clearTimer;
-  }, [timer, isActive, clearTimer]);
+  }, [isActive, timer, clearTimer]);
 
   return { timer, clearTimer };
 };

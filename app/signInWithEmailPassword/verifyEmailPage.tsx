@@ -106,8 +106,8 @@ const VerifyEmailPage=()=> {
                     style={{
                         width: 150,
                         height: 150,
-                        resizeMode: 'contain'
                     }}
+                    resizeMode='contain'
                 />
                 <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
                     <Text style={{ textAlign: 'center', fontSize: 28, fontWeight: '900', marginBottom: 20, color: '#fff' }}>Verify your email address to get started.</Text>

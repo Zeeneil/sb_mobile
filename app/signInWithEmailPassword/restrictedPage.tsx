@@ -31,8 +31,8 @@ const RestrictedPage = () => {
                     style={{
                         width: 200,
                         height: 200,
-                        resizeMode: 'contain'
                     }}
+                    resizeMode='contain'
                 />
                 <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
                     <Text style={{ textAlign: 'center', fontSize: 30, fontWeight: '900', marginBottom: 16, color: '#fff' }}>Account Restricted</Text>

@@ -1,37 +1,46 @@
 // @ts-ignore
-import { initializeApp } from 'firebase/app';
-import { HarmBlockThreshold, HarmCategory, getAI, getGenerativeModel, GoogleAIBackend, Schema } from "firebase/ai";
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
-import { getFirestore } from 'firebase/firestore';
-import { getDatabase, set, get, ref as dbRef, onValue, off } from "firebase/database";
-import {
-  getStorage,
-  ref as storageRef,
+import { getApp } from '@react-native-firebase/app';
+import { HarmBlockThreshold, HarmCategory, getAI, getGenerativeModel, GoogleAIBackend, Schema } from "@react-native-firebase/ai";
+import { getAuth, FirebaseAuthTypes, GoogleAuthProvider } from '@react-native-firebase/auth';
+import { 
+  getFirestore, 
+  FirebaseFirestoreTypes, 
+  getDoc,
+  serverTimestamp,
+  doc,
+  setDoc,
+  deleteDoc,
+} from '@react-native-firebase/firestore';
+import { 
+  getDatabase, 
+  FirebaseDatabaseTypes,
+  ref as dbRef,
+  get,
+  set,
+  onValue, 
+  off, 
+  runTransaction, 
+  update,
+} from "@react-native-firebase/database";
+import { 
+  getStorage, 
+  FirebaseStorageTypes, 
+  ref as storageRef, 
   uploadBytes,
   uploadBytesResumable,
   getDownloadURL,
   deleteObject,
-} from "firebase/storage";
-import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
+} from "@react-native-firebase/storage";
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from '@react-native-firebase/functions';
 import { Platform } from 'react-native';
 
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_API_KEY,
-  authDomain: process.env.EXPO_PUBLIC_AUTH_DOMAIN,
-  databaseURL: process.env.EXPO_PUBLIC_DATABASE_URL,
-  projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
-  storageBucket: process.env.EXPO_PUBLIC_STORAGE_BUCKET,
-  messagingSenderId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID,
-  appId: process.env.EXPO_PUBLIC_APP_ID,
-  measurementId: process.env.EXPO_PUBLIC_MEASUREMENT_ID,
-};
-
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
+const app = getApp();
+const auth = getAuth();
+const firestore = getFirestore();
+const storage = getStorage();
+const database = getDatabase();
+const functions = getFunctions();
 const ai = getAI(app, { backend: new GoogleAIBackend() });
 const safetySettings = [
   {
@@ -46,7 +55,7 @@ const safetySettings = [
 const jsonSchema = Schema.object({
   properties: {
     title: Schema.string(),
-    summary: Schema.string(),
+    summary: Schema.string(), 
     objectives: Schema.array({ items: Schema.string() }),
     quizzes: Schema.array({
       items: Schema.object({
@@ -103,10 +112,6 @@ const model = getGenerativeModel(ai, {
     responseSchema: jsonSchema
   },
 });
-const db = getFirestore(app);
-const storage = getStorage(app);
-const database = getDatabase(app);
-const functions = getFunctions(app, "us-central1");
 
 let host = "";
 
@@ -139,18 +144,31 @@ export {
   app,
   model,
   auth,
-  db,
+  firestore,
   storage,
   database,
   functions,
-  set,
-  get,
+  GoogleAuthProvider,
+  FirebaseAuthTypes,
+  FirebaseFirestoreTypes,
+  FirebaseDatabaseTypes,
+  FirebaseStorageTypes,
+  getDoc,
+  serverTimestamp,
+  doc,
+  setDoc,
+  deleteDoc,
   dbRef,
+  get,
+  set,
   onValue,
   off,
+  runTransaction,
+  update,
   storageRef,
   uploadBytes,
   uploadBytesResumable,
   getDownloadURL,
   deleteObject,
+  httpsCallable,
 };

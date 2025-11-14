@@ -1,5 +1,4 @@
-import { functions } from "../firebase/firebase";
-import { httpsCallable } from "firebase/functions";
+import { functions, httpsCallable } from "@/firebase/firebase";
 
 export const doGenerateElevenLabsSpeech = async (text: string, speed: number = 1.0) => {
   try {
@@ -355,10 +354,7 @@ export const doGetAllClassMembersGrade = async (
   gradeLevel: string,
 ) => {
   try {
-    const getAllClassMembersGrade = httpsCallable(
-      functions,
-      "getAllClassMembersGrade",
-    );
+    const getAllClassMembersGrade = httpsCallable(functions, "getAllClassMembersGrade");
     const response = await getAllClassMembersGrade({ classId, gradeLevel });
     return response.data;
   } catch (error) {
@@ -889,10 +885,7 @@ export const doSubmitSeatworkorQuizAnswers = async (
 
 export const doGetDescriptiveAnalytics = async () => {
   try {
-    const getDecriptiveAnalytics = httpsCallable(
-      functions,
-      "getDescriptiveAnalytics",
-    );
+    const getDecriptiveAnalytics = httpsCallable(functions, "getDescriptiveAnalytics");
     const response = await getDecriptiveAnalytics();
     return response.data;
   } catch (error) {

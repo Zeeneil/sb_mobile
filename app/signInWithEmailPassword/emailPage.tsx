@@ -73,8 +73,8 @@ const EmailPage=()=> {
                         style={{
                             width: 160,
                             height: 200,
-                            resizeMode: 'contain'
                         }}
+                        resizeMode='contain'
                     />
                 </View>
                 <View style={{ flex: 1 }}>

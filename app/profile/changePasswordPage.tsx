@@ -85,8 +85,8 @@ const ChangePasswordPage=()=> {
                         style={{
                             width: 200,
                             height: 180,
-                            resizeMode: 'contain',
                         }}
+                        resizeMode='contain'
                     />
                 </View>
                 <View style={{ flex: 1 }}>

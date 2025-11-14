@@ -113,7 +113,8 @@ const ViewProfile = () => {
             <View style={{position: 'relative', alignSelf: 'center', marginBottom: 16}}>
               <Image
                 source={photoPreview ? { uri: photoPreview } : require('@/assets/images/man.png')}
-                style={{width: 150, height: 150, borderRadius: 40, borderWidth: 3, borderColor: '#2C3E50', resizeMode: 'contain'}}
+                style={{width: 150, height: 150, borderRadius: 40, borderWidth: 3, borderColor: '#2C3E50'}}
+                resizeMode='contain'
               />
               {editMode && (
                 <View style={{position: 'absolute', top: 0, left: 0, width: 150, height: 150, borderRadius: 40, backgroundColor: 'rgba(44,62,80,0.4)', alignItems: 'center', justifyContent: 'center'}}>

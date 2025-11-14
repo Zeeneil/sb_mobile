@@ -1,8 +1,27 @@
 // firebaseAuth.tsx
-import * as Google from 'expo-auth-session/providers/google';
 import { GoogleSignin, isCancelledResponse, isErrorWithCode, isSuccessResponse, statusCodes } from '@react-native-google-signin/google-signin';
-import { auth, db, storageRef, uploadBytes, getDownloadURL, storage, database, dbRef, set, get } from "./firebase";
-import { doCheckUserProfileDuplicates, doSetUserClaims } from "../api/functions";
+import { 
+  auth,
+  firestore, 
+  storage, 
+  database, 
+  GoogleAuthProvider,
+  FirebaseAuthTypes, 
+  FirebaseFirestoreTypes,
+  getDoc, 
+  serverTimestamp,
+  doc,
+  setDoc,
+  deleteDoc,
+  dbRef,
+  get,
+  set,
+  update,
+  storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "./firebase";
+import { doCheckUserProfileDuplicates, doSetUserClaims } from "@/api/functions";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -15,25 +34,11 @@ import {
   deleteUser,
   updateEmail,
   updateProfile,
-  User,
-  UserCredential,
   verifyBeforeUpdateEmail,
-  GoogleAuthProvider,
   signInWithCredential,
-  // UserProfile
-} from "firebase/auth";
-import {
-  serverTimestamp,
-  doc,
-  setDoc,
-  getDoc,
-  DocumentReference,
-  DocumentData,
-} from "firebase/firestore";
-import { update } from 'firebase/database';
+} from "@react-native-firebase/auth";
 import { useRouter } from 'expo-router';
 import { Toast } from 'toastify-react-native';
-import { useLogRegContext } from '@/hooks/logRegContext';
 import { checkUserStatus } from '@/utils/helpers';
 // Additional types
 interface AdditionalUserData {
@@ -66,7 +71,7 @@ export const doCreateUserWithEmailAndPassword = async (
   gradeLevels: string[] | null = null,
   gradeLevel: string | null = null,
 ): Promise<{ success: boolean }> => {
-  const userCredential: UserCredential = await createUserWithEmailAndPassword(
+  const userCredential: FirebaseAuthTypes.UserCredential = await createUserWithEmailAndPassword(
     auth,
     email,
     password,
@@ -208,7 +213,7 @@ export const doGoogleSignIn = async (): Promise<{ success: boolean }> => {
 
 // Auth state listener
 export const onAuthStateChange = (
-  callback: (user: User | null) => void
+  callback: (user: FirebaseAuthTypes.User | null) => void
 ): (() => void) => {
   return onAuthStateChanged(auth, async (user) => {
     if (user) {
@@ -227,13 +232,13 @@ export const onAuthStateChange = (
 
 // Create or update Firestore document
 export const createUserDocumentfromAuth = async (
-  userAuth: User | null,
+  userAuth: FirebaseAuthTypes.User | null,
   additionalData: AdditionalUserData = {},
-): Promise<DocumentReference<DocumentData> | void> => {
+): Promise<FirebaseFirestoreTypes.DocumentReference<FirebaseFirestoreTypes.DocumentData> | void> => {
   if (!userAuth) return;
   const realtimeUserRef = dbRef(database, `users/${userAuth.uid}`);
   const snapshot = await get(realtimeUserRef);
-  const userRef = doc(db, "users", userAuth.uid);
+  const userRef = doc(firestore, "users", userAuth.uid);
   const userDoc = await getDoc(userRef);
   const tokenResult = await userAuth.getIdTokenResult();
   const role = tokenResult.claims.role || "Student";
@@ -282,7 +287,7 @@ export const createUserDocumentfromAuth = async (
   return userRef;
 };
 
-const requireCurrentUser = (): User => {
+const requireCurrentUser = (): FirebaseAuthTypes.User => {
   const user = auth.currentUser;
   if (!user) throw new Error("No authenticated user.");
   return user;
@@ -337,7 +342,13 @@ export const doDeleteUser = async (
   const user = requireCurrentUser();
   try {
     await doReauthenticateWithEmail(email, password);
-    await setDoc(doc(db, "users", user.uid), {}, { merge: false });
+    await deleteDoc(doc(`users/${user.uid}`));
+    await dbRef(database, `users/${user.uid}`).remove();
+    const emailKey = user.email ? user.email.replace(/\./g, ',') : null;
+    if (emailKey) {
+      const userEmailRef = dbRef(database, `userEmails/${emailKey}`);
+      await userEmailRef.remove();
+    }
     await deleteUser(user);
   } catch (error) {
     console.error("Error during account deletion:", error);
@@ -359,7 +370,7 @@ export const doVerifyBeforeUpdateEmail = async (newEmail: string) => {
       url: `https://salimbigkas.web.app/home`,
       handleCodeInApp: true,
     });
-    const userRef = doc(db, "users", user.uid);
+    const userRef = doc(firestore, "users", user.uid);
     await setDoc(userRef, { email: newEmail }, { merge: true });
     const newEmailKey = newEmail.replace(/\./g, ',');
     const newUserEmailRef = dbRef(database, `userEmails/${newEmailKey}`);
@@ -397,18 +408,7 @@ export const doUpdateUserProfile = async (
     photoURL = await getDownloadURL(photoRef);
   }
 
-  // if (phoneNumber && phoneNumber !== user.phoneNumber) {
-  //   const recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {}, auth);
-  //   const provider = new PhoneAuthProvider(auth);
-  //   const verificationId = await provider.verifyPhoneNumber(phoneNumber, recaptchaVerifier);
-  //   const verificationCode = window.prompt("Enter the verification code sent to your phone:");
-  //   if (!verificationCode) throw new Error("Verification code is required.");
-  //   const credential = PhoneAuthProvider.credential(verificationId, verificationCode);
-  //   await updatePhoneNumber(user, credential);
-  // }
-
-  // Update Firestore document
-  const userRef = doc(db, "users", user.uid);
+  const userRef = doc(firestore, "users", user.uid);
   await setDoc(userRef, {
     displayName,
     email,
@@ -418,7 +418,7 @@ export const doUpdateUserProfile = async (
   }, { merge: true });
 };
 
-export const syncEmailVerifiedToRealtimeDB = async (user: User) => {
+export const syncEmailVerifiedToRealtimeDB = async (user: FirebaseAuthTypes.User) => {
   const userRef = dbRef(database, `users/${user.uid}/emailVerified`);
   await set(userRef, user.emailVerified);
   await createUserDocumentfromAuth(user, {});

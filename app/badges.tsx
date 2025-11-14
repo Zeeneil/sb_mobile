@@ -172,7 +172,7 @@ const Badges = () => {
                         </View>
                         {BADGES.map(badge => (
                             <View key={badge.id} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                                <Image source={badge.image} style={{ width: 70, height: 70, marginRight: 16 }} />
+                                <Image source={badge.image} style={{ width: 70, height: 70, marginRight: 16 }} resizeMode='contain' />
                                 <View style={{ flex: 1, flexDirection: 'column' }}>
                                     <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>{badge.name}</Text>
                                     <Text style={{ color: '#fff', fontSize: 14 }}>{badge.description}</Text>

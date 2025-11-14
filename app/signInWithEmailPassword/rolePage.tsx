@@ -28,8 +28,8 @@ const RolePage=()=> {
                     style={{
                         width: 280,
                         height: 200,
-                        resizeMode: 'contain'
                     }}
+                    resizeMode='contain'
                 />
             </View>
             <View style={{ flex: 1 }}>

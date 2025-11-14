@@ -30,9 +30,9 @@ const PlayBtn = memo(({ disabled, onPress }: PlayBtnProps) => {
                     style={{
                         width: 60,
                         height: 60,
-                        resizeMode: 'contain',
                         marginLeft: index > 0 ? -14 : 0,
                     }}
+                    resizeMode='contain'
                 />
             ))}
         </TouchableOpacity>

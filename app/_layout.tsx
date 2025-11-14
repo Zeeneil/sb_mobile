@@ -1,10 +1,10 @@
+import { useEffect } from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 import '../index.css';
@@ -23,6 +23,8 @@ import { SeatworkProvider } from '@/hooks/seatworkContext';
 import { MusicProvider } from '@/hooks/musicPlayer';
 import AppMusicController from '@/hooks/appMusicController';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { CopilotProvider } from "react-native-copilot";
+import CopilotCustomTooltip from '@/components/CopilotCustomTooltip';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -36,6 +38,8 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+(globalThis as any).RNFB_SILENCE_MODULAR_DEPRECATION_WARNINGS = true;
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -59,31 +63,55 @@ export default function RootLayout() {
   }, []);
 
   if (!loaded && !error) {
-    return null;
+    return loadingDot();
   }
 
+  const style = {
+    backgroundColor: "transparent",
+    borderRadius: 10,
+  };
+
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <StatusBar style="light" />
-      <MusicProvider>
-        <AppMusicController />
-        <PaperProvider>
-          <AuthProvider>
-            <LogRegProvider>
-              <ClassProvider>
-                <BigkasProvider>
-                  <SeatworkProvider>
-                    <QuizProvider>
-                      <RootLayoutNav />
-                    </QuizProvider>
-                  </SeatworkProvider>
-                </BigkasProvider>
-              </ClassProvider>
-            </LogRegProvider>
-          </AuthProvider>
-        </PaperProvider>
-      </MusicProvider>
-    </GestureHandlerRootView>
+    <CopilotProvider
+      animated
+      overlay="svg"
+      margin={0}
+      animationDuration={400}
+      verticalOffset={20}
+      arrowColor="#8a3903"
+      tooltipStyle={style}
+      tooltipComponent={CopilotCustomTooltip}
+      labels={{
+        skip: "Itigil",
+        previous: "Bumalik",
+        next: "Susunod",
+        finish: "Tapos"
+      }}
+      backdropColor="rgba(0, 0, 0, 0.7)"
+      androidStatusBarVisible={false}
+    >
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <StatusBar style="light" />
+        <MusicProvider>
+          <AppMusicController />
+            <PaperProvider>
+              <AuthProvider>
+                <LogRegProvider>
+                  <ClassProvider>
+                    <BigkasProvider>
+                      <SeatworkProvider>
+                        <QuizProvider>
+                          <RootLayoutNav />
+                        </QuizProvider>
+                      </SeatworkProvider>
+                    </BigkasProvider>
+                  </ClassProvider>
+                </LogRegProvider>
+              </AuthProvider>
+            </PaperProvider>
+        </MusicProvider>
+      </GestureHandlerRootView>
+    </CopilotProvider>
   );
 }
 

@@ -4,7 +4,7 @@ import { FontAwesome6, MaterialIcons } from "@expo/vector-icons";
 import { imageSrc } from "@/Icons/icons";
 import { useAnimatedStyle, interpolate } from "react-native-reanimated";
 import Carousel from "react-native-reanimated-carousel";
-
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 interface HeaderProps {
     question: any;
     cluePositions: number[];
@@ -17,7 +17,12 @@ interface HeaderProps {
     availableEnumerationItems: any[];
     onItemTap: (item: string) => void;
     setOpenImage: (open: boolean) => void;
+    visible: boolean;
 }
+
+const WalkthroughableView = walkthroughable(View);
+const WalkthroughableText = walkthroughable(Text);
+const WalkthroughableTouchableOpacity = walkthroughable(TouchableOpacity);
 
 const Header = memo(({ 
     question,
@@ -30,7 +35,8 @@ const Header = memo(({
     isAnswered,
     availableEnumerationItems,
     onItemTap,
-    setOpenImage
+    setOpenImage,
+    visible,
 }: HeaderProps) => {
     // const progress = ((currentQuestionIndex) / totalQuestions) * 100;
     // const timeProgress = (timer / questionTime) * 100;
@@ -110,7 +116,7 @@ const Header = memo(({
             }}>
                 {/* Question Progress */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                    <View style={{
+                    <WalkthroughableView style={{
                         backgroundColor: '#2C3E50',
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -121,37 +127,55 @@ const Header = memo(({
                         borderRadius: 14
                     }}>
                         <MaterialIcons name="quiz" size={16} color="#3b82f6" />
-                        <Text style={{
-                            color: 'white',
-                            fontSize: 12,
-                            fontWeight: '900'
-                        }}>
-                            Question {currentQuestionIndex + 1} / {totalQuestions}
-                        </Text>
-                        <View style={{
-                            backgroundColor: question.type === 'multiple-choice' ? '#3b82f6' :
-                                question.type === 'identification' ? '#10b981' :
-                                question.type === 'enumeration' ? '#f59e0b' :
-                                question.type === 'matching' ? '#8b5cf6' :
-                                '#ef4444',
-                            paddingHorizontal: 12,
-                            paddingVertical: 2,
-                            borderRadius: 10
-                        }}>
-                            <Text style={{
+                        <CopilotStep
+                            name="quiz-question-number"
+                            order={2}
+                            text="Makikita mo dito ang bilang ng tanong na iyong sinasagutan. Huwag kalimutang suriin ito!"
+                        >
+                            <WalkthroughableText style={{
                                 color: 'white',
                                 fontSize: 12,
-                                fontWeight: '900',
-                                textTransform: 'capitalize'
+                                fontWeight: '900'
                             }}>
-                                {question.type.replace('-', ' ')}
-                            </Text>
-                        </View>
-                    </View>
-                    {question?.image && (
-                        <TouchableOpacity onPress={() => setOpenImage(true)}>
-                            <Image source={imageSrc.image} style={{ width: 40, height: 40 }} />
-                        </TouchableOpacity>
+                                Question {currentQuestionIndex + 1} / {totalQuestions}
+                            </WalkthroughableText>
+                        </CopilotStep>
+                        <CopilotStep
+                            name="quiz-type"
+                            order={1}
+                            text="Makikita mo dito kung anong uri ng pagsusulit ang iyong ginagawa. Galingan at gawin ang iyong makakaya!"
+                        >
+                            <WalkthroughableView style={{
+                                backgroundColor: question.type === 'multiple-choice' ? '#3b82f6' :
+                                    question.type === 'identification' ? '#10b981' :
+                                    question.type === 'enumeration' ? '#f59e0b' :
+                                    question.type === 'matching' ? '#8b5cf6' :
+                                    '#ef4444',
+                                paddingHorizontal: 12,
+                                paddingVertical: 2,
+                                borderRadius: 10
+                            }}>
+                                <Text style={{
+                                    color: 'white',
+                                    fontSize: 12,
+                                    fontWeight: '900',
+                                    textTransform: 'capitalize'
+                                }}>
+                                    {question.type.replace('-', ' ')}
+                                </Text>
+                            </WalkthroughableView>
+                        </CopilotStep>
+                    </WalkthroughableView>
+                    {(visible || question?.image) && (
+                        <CopilotStep
+                            name="quiz-question-image"
+                            order={6}
+                            text="Kung may larawan ang tanong, pindutin ito para makikita. Pansinin ang mga detalye sa larawan!"
+                        >
+                            <WalkthroughableTouchableOpacity onPress={() => setOpenImage(true)}>
+                                <Image source={imageSrc.image} style={{ width: 40, height: 40 }} resizeMode='contain' />
+                            </WalkthroughableTouchableOpacity>
+                        </CopilotStep>
                     )}
                 </View>
                 {question.type == 'multiple' && (
@@ -355,42 +379,54 @@ const Header = memo(({
                     gap: 12
                 }}>
                     {/* Score */}
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: '#f0fdf4',
-                        padding: 1,
-                        borderRadius: 10
-                    }}>
-                        <FontAwesome6 name="trophy" size={14} color="#16a34a" />
-                        <Text style={{
-                            marginLeft: 8,
-                            fontSize: 14,
-                            fontWeight: '900',
-                            color: '#15803d'
+                    <CopilotStep
+                        name="quiz-score"
+                        order={4}
+                        text="Makikita mo dito ang iyong kasalukuyang iskor. Ipakita ang iyong galing!"
+                    >
+                        <WalkthroughableView style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: '#f0fdf4',
+                            padding: 1,
+                            borderRadius: 10
                         }}>
-                            {totalScore.toLocaleString()}
-                        </Text>
-                    </View>
+                            <FontAwesome6 name="trophy" size={14} color="#16a34a" />
+                            <WalkthroughableText style={{
+                                marginLeft: 8,
+                                fontSize: 14,
+                                fontWeight: '900',
+                                color: '#15803d'
+                            }}>
+                                {totalScore.toLocaleString()}
+                            </WalkthroughableText>
+                        </WalkthroughableView>
+                    </CopilotStep>
                     {/* Timer */}
-                    <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: isTimeRunningOut ? '#fee2e2' : '#f0f9ff',
-                        borderColor: isTimeRunningOut ? '#fecaca' : '#dbeafe',
-                        padding: 1,
-                        borderRadius: 10,
-                        gap: 8,
-                    }}>
-                        <Image source={imageSrc.clock} style={{ width: 16, height: 16 }} />
-                        <Text style={{
-                            fontSize: 14,
-                            fontWeight: '900',
-                            color: isTimeRunningOut ? '#dc2626' : '#3b82f6'
+                    <CopilotStep
+                        name="quiz-timer"
+                        order={3}
+                        text="Makikita mo dito ang natitirang oras para sagutan ang tanong. Mabilis lang, kaya mo ’yan!"
+                    >
+                        <WalkthroughableView style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: isTimeRunningOut ? '#fee2e2' : '#f0f9ff',
+                            borderColor: isTimeRunningOut ? '#fecaca' : '#dbeafe',
+                            padding: 1,
+                            borderRadius: 10,
+                            gap: 8,
                         }}>
-                            {formatTime(timer)}
-                        </Text>
-                    </View>
+                            <Image source={imageSrc.clock} style={{ width: 16, height: 16 }} resizeMode='contain' />
+                            <Text style={{
+                                fontSize: 14,
+                                fontWeight: '900',
+                                color: isTimeRunningOut ? '#dc2626' : '#3b82f6'
+                            }}>
+                                {formatTime(timer)}
+                            </Text>
+                        </WalkthroughableView>
+                    </CopilotStep>
                 </View>
             </View>
         </View>

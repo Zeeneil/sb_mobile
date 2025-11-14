@@ -68,9 +68,9 @@ const LevelSelection = memo(() => {
         {!state.isLoading && (
           selectedYunitLevels.length > 0 && (
             <View style={styles.yunitContainer}>
-              <Image source={imageSrc.lessThan} style={{ width: 28, height: 28 }} />
+              <Image source={imageSrc.lessThan} style={{ width: 28, height: 28 }} resizeMode='contain' />
               <YunitText yunitNumber={state.selectedYunitNumber} />
-              <Image source={imageSrc.greaterThan} style={{ width: 28, height: 28 }} />
+              <Image source={imageSrc.greaterThan} style={{ width: 28, height: 28 }} resizeMode='contain' />
             </View>
           )
         )}
@@ -94,6 +94,7 @@ const LevelSelection = memo(() => {
                       <Image
                         source={imageSrc.blackboardLevel}
                         style={[styles.levelBlackboard, !unlocked && styles.levelLocked]}
+                        resizeMode='contain'
                       />
                       <TouchableOpacity
                         disabled={!unlocked}
@@ -106,10 +107,10 @@ const LevelSelection = memo(() => {
                           Level {level.levelNumber}
                         </Text>
                         {!unlocked && (
-                          <Image source={imageSrc.locked} style={styles.lockIcon} />
+                          <Image source={imageSrc.locked} style={styles.lockIcon} resizeMode='contain' />
                         )}
                         {level.isCompleted && (
-                          <Image source={imageSrc.check} style={styles.checkIcon} />
+                          <Image source={imageSrc.check} style={styles.checkIcon} resizeMode='contain' />
                         )}
                       </TouchableOpacity>
                     </View>
@@ -183,7 +184,6 @@ const styles = StyleSheet.create({
   levelBlackboard: {
     width: 220,
     height: 160,
-    resizeMode: 'contain',
     position: 'relative',
   },
   levelButton: {
@@ -215,7 +215,6 @@ const styles = StyleSheet.create({
   lockIcon: {
     width: 60,
     height: 60,
-    resizeMode: 'contain',
     position: 'absolute',
     top: '50%',
     left: '50%',

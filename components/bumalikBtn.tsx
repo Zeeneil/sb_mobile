@@ -32,7 +32,7 @@ const BumalikBtn = memo(({ disabled, style, onPress, size }: BumalikBtnProps) =>
             accessibilityLabel="Back"
             onPress={onPress}
         >
-            <Image source={imageSrc.back} style={{ width: size, height: size }} />
+            <Image source={imageSrc.back} style={{ width: size, height: size }} resizeMode='contain' />
             <View style={{ flexDirection: "row", backgroundColor: 'transparent' }}>
                 {getWordImages(`bumalik`, true).map((imageSrc, index) => (
                     <Image

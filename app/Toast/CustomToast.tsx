@@ -39,7 +39,7 @@ const CustomToast = ({ icon, text1, text2, hide }: CustomToastProps) => {
         elevation: 5,
         gap: 16,
       }}>
-        <Image source={imageSrc[icon || 'errorBox']} style={{ width: 40, height: 40 }} />
+        <Image source={imageSrc[icon || 'errorBox']} style={{ width: 40, height: 40 }} resizeMode='contain' />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 24, fontWeight: '900', color: '#fff' }}>{text1}</Text>
           <Text style={{ marginTop: 4, fontSize: 16, color: '#fff' }}>{text2}</Text>

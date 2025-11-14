@@ -287,8 +287,8 @@ const Results = () => {
                 borderRadius: 12,
                 borderWidth: 2,
                 borderColor: "#f59e42",
-                resizeMode: "cover",
               }}
+              resizeMode='cover'
             />
           </View>
         )}

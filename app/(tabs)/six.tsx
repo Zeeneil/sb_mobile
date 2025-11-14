@@ -138,7 +138,7 @@ export default function TabSixScreen() {
                   <View style={{ position: 'absolute', right: 65, top: 65, alignItems: 'center' }}>
                     <Text style={{ color: '#2C3E50', fontSize: 16, fontWeight: '900' }}>Tingnan</Text>
                   </View>
-                  <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100, resizeMode: 'contain' }} />
+                  <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100 }} resizeMode='contain' />
                 </TouchableOpacity>
               </View>
             ) : (
@@ -193,7 +193,7 @@ export default function TabSixScreen() {
                   <View style={{ position: 'absolute', right: 65, top: 65, alignItems: 'center' }}>
                     <Text style={{ color: '#2C3E50', fontSize: 16, fontWeight: '900' }}>Tingnan</Text>
                   </View>
-                  <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100, resizeMode: 'contain' }} />
+                  <Image source={imageSrc.aiQuizPeeking} style={{ position: 'absolute', right: -19, bottom: 5, width: 100, height: 100 }} resizeMode='contain' />
                 </TouchableOpacity>
               </>
             ) : (
@@ -240,7 +240,7 @@ export default function TabSixScreen() {
                   }}
                 >
                   <View style={{ flexDirection: 'row', flex: 1, width: '100%', alignItems: 'center', padding: 12, gap: 12, backgroundColor: '#FFA600' }}>
-                    <Image source={imageSrc.book} style={{ width: 40, height: 40, resizeMode: 'contain' }} />
+                    <Image source={imageSrc.book} style={{ width: 40, height: 40 }} resizeMode='contain'/>
                     <Text numberOfLines={3} style={{
                       width: '70%',
                       fontSize: 14,

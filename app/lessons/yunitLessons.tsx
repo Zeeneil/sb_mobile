@@ -27,7 +27,7 @@ const YunitLessons = () => {
         style={{ position: 'absolute', opacity: 0.5, width: width, height: height, left: 0 }}
         resizeMode='stretch'
       />
-      <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 20, gap: 12, backgroundColor: 'transparent' }}>
+      <View style={{ flexDirection: 'column', justifyContent: 'space-between', paddingHorizontal: 16, marginTop: 10, gap: 12, backgroundColor: 'transparent' }}>
         <BumalikBtn 
           style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 }}
           onPress={() => router.back()}
@@ -72,7 +72,7 @@ const YunitLessons = () => {
                     router.navigate('/lessons/modal');
                   }}
                 >
-                  <Image source={imageSrc.book} style={{ width: 60, height: 60, resizeMode: 'contain' }} />
+                  <Image source={imageSrc.book} style={{ width: 60, height: 60 }} resizeMode='contain' />
                   <View style={{ flexDirection: 'column', flex: 1 }}>
                     <Text numberOfLines={2} style={{ width: '100%', fontSize: 16, fontWeight: 'bold', color: '#2C3E50' }}>
                       Aralin {lesson.aralinNumero} - {lesson.aralinPamagat}

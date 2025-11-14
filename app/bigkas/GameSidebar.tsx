@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import { imageSrc } from '../../Icons/icons';
 import { getNumberImages } from '../../utils/helpers';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 interface GameSidebarProps {
   timer: number;
@@ -13,17 +14,20 @@ interface GameSidebarProps {
   onResume: () => void;
 }
 
+const WalkthroughableView = walkthroughable(View);
+const WalkthroughableText = walkthroughable(Text);
+
 const GameSidebar = memo(({ timer, maxTime, currentPhrase, totalPhrases, paused, onPause, onResume }: GameSidebarProps) => {
   const timerPercent = (timer / maxTime) * 100;
 
   const renderNumberImages = (num: number, size = 50) => (
     getNumberImages(num)?.map((img, idx) => (
-      <Image key={idx} source={img} style={{ height: size, width: size * 0.7, resizeMode: 'contain' }} />
+      <Image key={idx} source={img} style={{ height: size, width: size * 0.7 }} resizeMode='contain' />
     ))
   );
 
   return (
-    <View style={styles.root}>
+    <WalkthroughableView style={styles.root}>
       <View style={styles.pauseButtonContainer}>
         <TouchableOpacity
           style={styles.pauseButton}
@@ -33,31 +37,46 @@ const GameSidebar = memo(({ timer, maxTime, currentPhrase, totalPhrases, paused,
           <Image
             source={paused ? imageSrc.play : imageSrc.pause}
             style={styles.pauseIcon}
+            resizeMode='contain'
           />
         </TouchableOpacity>
       </View>
       <View style={styles.timerContainer}>
         <View style={[styles.timerBar, { height: `${timerPercent}%` }]} />
-        <Text style={styles.timerText}>{timer}</Text>
+        <CopilotStep
+          name="sidebar-timer"
+          order={1}
+          text="Heto ang timer! Subukan mong tapusin ang parirala bago ito mag-timeout. Kayang-kaya mo ’yan!"
+        >
+          <WalkthroughableText style={styles.timerText}>{timer}</WalkthroughableText>
+        </CopilotStep>
       </View>
-      <View style={styles.phraseContainer}>
-        <Text style={styles.phraseLabel}>Parirala</Text>
-        <View style={styles.phraseRow}>
-          {renderNumberImages(currentPhrase, 40)}
-          <Image source={imageSrc.slash} style={styles.slashIcon} />
-          {renderNumberImages(totalPhrases, 40)}
-        </View>
-      </View>
-    </View>
+      <CopilotStep
+        name="sidebar-phrase-progress"
+        order={2}
+        text="Dito mo makikita ang iyong progreso!"
+      >
+        <WalkthroughableView style={styles.phraseContainer}>
+          <WalkthroughableText style={styles.phraseLabel}>Parirala</WalkthroughableText>
+          <WalkthroughableView style={styles.phraseRow}>
+            {renderNumberImages(currentPhrase, 40)}
+            <Image source={imageSrc.slash} style={styles.slashIcon} resizeMode='contain' />
+            {renderNumberImages(totalPhrases, 40)}
+          </WalkthroughableView>
+        </WalkthroughableView>
+      </CopilotStep>
+    </WalkthroughableView>
   );
 });
 
 const styles = StyleSheet.create({
   root: {
+    position: 'relative',
     width: 100,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'space-between',
+    zIndex: 10,
   },
   pauseButtonContainer: {
     paddingTop: 24,
@@ -70,7 +89,6 @@ const styles = StyleSheet.create({
   pauseIcon: {
     height: 40,
     width: 40,
-    resizeMode: 'contain',
   },
   pauseText: {
     fontSize: 18,
@@ -116,7 +134,7 @@ const styles = StyleSheet.create({
   },
   phraseLabel: {
     fontSize: 18,
-    color: '#333',
+    color: '#fff',
     fontWeight: 'bold',
   },
   phraseRow: {
@@ -128,7 +146,6 @@ const styles = StyleSheet.create({
     height: 40,
     width: 20,
     marginHorizontal: 4,
-    resizeMode: 'contain',
   },
 });
 

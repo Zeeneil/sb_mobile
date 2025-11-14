@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { SafeAreaView, View, StyleSheet } from "react-native";
 import { doSetSaveProgressBigkas } from "../../api/functions";
 import { useAuth } from "../../hooks/authContext";
@@ -14,9 +14,12 @@ import { useRouter } from "expo-router";
 import { useBigkasContext } from "@/hooks/bigkasContext";
 import { StatusBar } from "expo-status-bar";
 import useAudioQueue from "../../hooks/useAudioQueue";
-import { buildJobsFromText, CreateAudioForJob } from "@/utils/helpers";
+import { buildJobsFromText, CreateAudioForJob, stepAudios } from "@/utils/helpers";
 import { useLogRegContext } from "@/hooks/logRegContext";
 import { Toast } from "toastify-react-native";
+import Svg, { Path } from 'react-native-svg';
+import { useCopilot } from "react-native-copilot";
+import { useStepAudio } from "@/hooks/useStepAudio";
 
 const PlayBigkas = memo(() => {
   const router = useRouter();
@@ -45,7 +48,9 @@ const PlayBigkas = memo(() => {
     [state.phrases, state.currentPhraseIndex]
   );
   const audioQueue = useAudioQueue(CreateAudioForJob);
-
+  const { start, currentStepNumber, visible } = useCopilot();
+  const hasStartedRef = useRef(false);
+  
   // Save progress function
   const saveProgress = useCallback(async () => {
     if (role !== "Student") return;
@@ -173,7 +178,7 @@ const PlayBigkas = memo(() => {
 
   useTimer({
     timer: state.timer,
-    isActive: !state.paused && !state.phraseCompleted,
+    isActive: !state.paused && !state.phraseCompleted && !visible,
     onTick: decrementTimer,
     onTimeout: handleTimerTimeout,
   });
@@ -198,38 +203,66 @@ const PlayBigkas = memo(() => {
     updateState({ showSpeed: false });
   }, [currentPhrase?.text, audioQueue, updateState]);
 
+  useEffect(() => {
+    const startTimer = setTimeout(() => {
+      if (!hasStartedRef.current) {
+        hasStartedRef.current = true;
+        start();
+      }
+    }, 0);
+    return () => {
+      clearTimeout(startTimer);
+    };
+  }, [start]);
+
+  useStepAudio({
+    visible,
+    currentStepNumber,
+    audioSources: stepAudios,
+    keyPrefix: 'bigkasStep',
+  });
+
+  const gameSidebarProps = useMemo(() => ({
+    timer: state.timer,
+    maxTime: maxTime,
+    currentPhrase: state.currentPhraseIndex + 1,
+    totalPhrases: state.phrases?.length,
+    paused: state.paused,
+    onPause: handlePause,
+    onResume: handleResume,
+  }), [state.timer, maxTime, state.currentPhraseIndex, state.phrases?.length, state.paused, handlePause, handleResume]);
+
+  const blackboardProps = useMemo(() => ({
+    phrase: currentPhrase,
+    wordResults: state.wordResults,
+    isActive: state.isActive,
+    onListen: handleStartListening,
+    showSpeed: state.showSpeed,
+    updateState: updateState,
+    onSpeak: handleSpeak,
+    audioQueue: audioQueue,
+  }), [currentPhrase, state.wordResults, state.isActive, handleStartListening, state.showSpeed, updateState, handleSpeak, audioQueue]);
+
+  const scorePanelProps = useMemo(() => ({
+    mode: mode,
+    phrases: state.phrases,
+    totalPoints: modePhrases?.totalPoints,
+    totalWords: modePhrases?.totalWords,
+    showPopup: state.showPopup,
+    isActive: state.isActive,
+    userTotalPoints: userTotalPoints,
+    userTotalWords: userTotalWords,
+  }), [mode, state.phrases, modePhrases?.totalPoints, modePhrases?.totalWords, state.showPopup, state.isActive, userTotalPoints, userTotalWords]);
+
   return (
     <SafeAreaView style={styles.root}>
       <StatusBar style="dark" />
-      <GameSidebar 
-        timer={state.timer}
-        maxTime={maxTime}
-        currentPhrase={state.currentPhraseIndex + 1}
-        totalPhrases={state.phrases?.length}
-        paused={state.paused}
-        onPause={handlePause}
-        onResume={handleResume}
-      />
-      <Blackboard 
-        phrase={currentPhrase}
-        wordResults={state.wordResults}
-        isActive={state.isActive}
-        onListen={handleStartListening}
-        showSpeed={state.showSpeed}
-        updateState={updateState}
-        onSpeak={handleSpeak}
-        audioQueue={audioQueue}
-      />
-      <ScorePanel 
-        mode={mode}
-        phrases={state.phrases}
-        totalPoints={modePhrases?.totalPoints}
-        totalWords={modePhrases?.totalWords}
-        showPopup={state.showPopup}
-        isActive={state.isActive}
-        userTotalPoints={userTotalPoints}
-        userTotalWords={userTotalWords}
-      />
+      <GameSidebar {...gameSidebarProps} />
+      <Blackboard {...blackboardProps} />
+      <ScorePanel {...scorePanelProps} />
+      <Svg viewBox="0 0 1440 320" style={{ position: 'absolute', bottom: 0, width: '100%', height: 195, zIndex: 0 }}>
+        <Path fill="#2C3E50" fillOpacity="1" d="M0,32L34.3,37.3C68.6,43,137,53,206,90.7C274.3,128,343,192,411,208C480,224,549,192,617,160C685.7,128,754,96,823,117.3C891.4,139,960,213,1029,256C1097.1,299,1166,309,1234,298.7C1302.9,288,1371,256,1406,240L1440,224L1440,320L1405.7,320C1371.4,320,1303,320,1234,320C1165.7,320,1097,320,1029,320C960,320,891,320,823,320C754.3,320,686,320,617,320C548.6,320,480,320,411,320C342.9,320,274,320,206,320C137.1,320,69,320,34,320L0,320Z"></Path>
+      </Svg>
       {state.paused && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 20 }}>
           <BigkasModal 

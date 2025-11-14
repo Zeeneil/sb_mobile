@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { imageSrc } from '../../Icons/icons';
 import { getWordImages } from '../../utils/helpers';
 import useAudioQueue from '../../hooks/useAudioQueue';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 interface BlackboardProps {
   phrase: {
@@ -19,6 +20,11 @@ interface BlackboardProps {
   audioQueue: ReturnType<typeof useAudioQueue>;
 }
 
+const WalkthroughableView = walkthroughable(View);
+const WalkthroughableText = walkthroughable(Text);
+const WalkthroughableTouchableOpacity = walkthroughable(TouchableOpacity);
+const WalkthroughableImage = walkthroughable(Image);
+
 const Blackboard = memo(({ phrase, wordResults, isActive, onListen, showSpeed, updateState, onSpeak, audioQueue }: BlackboardProps) => {
   const { pause, resume, stop, isPlaying, isPaused } = audioQueue;
   return (
@@ -27,6 +33,7 @@ const Blackboard = memo(({ phrase, wordResults, isActive, onListen, showSpeed, u
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
+      zIndex: 10,
     }}>
       <Image
         source={imageSrc.blackboard}
@@ -101,7 +108,7 @@ const Blackboard = memo(({ phrase, wordResults, isActive, onListen, showSpeed, u
             </View>
           ) : (
             <>
-              <TouchableOpacity
+              <WalkthroughableTouchableOpacity
                 disabled={isActive}
                 style={[{
                   flexDirection: 'row',
@@ -112,18 +119,24 @@ const Blackboard = memo(({ phrase, wordResults, isActive, onListen, showSpeed, u
                 } : null]}
                 onPress={() => updateState({ showSpeed: !showSpeed })}
               >
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}>
-                  <Text style={{
-                    color: '#FFF9C4',
-                    fontSize: 20,
-                    fontWeight: 'bold',
-                  }}>I-tap upang makinig</Text>
-                  <Ionicons name="volume-medium" size={28} color="#FFF9C4" style={{ marginLeft: 6 }} />
-                </View>
-              </TouchableOpacity>
+                <CopilotStep
+                  name="bigkas-listen-button"
+                  order={3}
+                  text="Pindutin ito para marinig kung paano bigkasin ang parirala. Makinig nang mabuti!"
+                >
+                  <WalkthroughableView style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                  }}>
+                    <WalkthroughableText style={{
+                      color: '#FFF9C4',
+                      fontSize: 20,
+                      fontWeight: 'bold',
+                    }}>I-tap upang makinig</WalkthroughableText>
+                    <Ionicons name="volume-medium" size={28} color="#FFF9C4" style={{ marginLeft: 6 }} />
+                  </WalkthroughableView>
+                </CopilotStep>
+              </WalkthroughableTouchableOpacity>
               {showSpeed && (
                 <View style={{ position: 'absolute', top: '100%', left: '35%', zIndex: 50, backgroundColor: '#003311', borderWidth: 2, borderColor: '#8a3903', borderRadius: 16, padding: 10, alignItems: 'center', gap: 8 }}>
                   <TouchableOpacity onPress={() => onSpeak("normal")}>
@@ -137,39 +150,45 @@ const Blackboard = memo(({ phrase, wordResults, isActive, onListen, showSpeed, u
             </>
           )}
         </View>
-        <View style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          marginVertical: 12,
-          paddingHorizontal: 12,
-          width: '100%',
-        }}>
-          {phrase?.text.split(" ").map((word: string, idx: number) => (
-            <Text
-              key={idx}
-              style={[
-                {
-                  textAlign: 'left',
-                  fontSize: 24,
-                  fontWeight: 'normal',
-                  color: '#FFF9C4',
-                  marginHorizontal: 4,
-                  borderBottomWidth: 4,
-                  borderColor: 'transparent',
-                  paddingBottom: 2,
-                },
-                wordResults[idx] === true
-                  ? { borderColor: 'green' }
-                  : wordResults[idx] === false
-                  ? { borderColor: 'red' }
-                  : { borderColor: 'transparent' }
-              ]}
-            >
-              {word}
-            </Text>
-          ))}
-        </View>
-        <TouchableOpacity
+        <CopilotStep
+          name="bigkas-phrase"
+          order={4}
+          text="Ito ang pariralang kailangan mong bigkasin. Ipakita ang galing mo!"
+        >
+          <WalkthroughableView style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            marginVertical: 12,
+            paddingHorizontal: 12,
+            width: '100%',
+          }}>
+            {phrase?.text.split(" ").map((word: string, idx: number) => (
+              <WalkthroughableText
+                key={idx}
+                style={[
+                  {
+                    textAlign: 'left',
+                    fontSize: 24,
+                    fontWeight: 'normal',
+                    color: '#FFF9C4',
+                    marginHorizontal: 4,
+                    borderBottomWidth: 4,
+                    borderColor: 'transparent',
+                    paddingBottom: 2,
+                  },
+                  wordResults[idx] === true
+                    ? { borderColor: 'green' }
+                    : wordResults[idx] === false
+                    ? { borderColor: 'red' }
+                    : { borderColor: 'transparent' }
+                ]}
+              >
+                {word}
+              </WalkthroughableText>
+            ))}
+          </WalkthroughableView>
+        </CopilotStep>
+        <WalkthroughableTouchableOpacity
           disabled={isActive}
           style={[
             {
@@ -183,30 +202,36 @@ const Blackboard = memo(({ phrase, wordResults, isActive, onListen, showSpeed, u
           ]}
           onPress={onListen}
         >
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}>
-            {getWordImages("bigkasin", true).map((imageSrc, index) => (
-              <Image
-                key={index}
-                source={imageSrc || ""}
-                style={{
-                  height: 36,
-                  width: 36,
-                  marginHorizontal: 2,
-                  ...(index >= 0 && index <= 2 
-                    ? { marginLeft: -18 }
-                    : index >= 3 && index <= 5 ? { marginLeft: -12 }
-                    : index >= 5 ? { marginLeft: -16 }
-                    : {}
-                  )
-                }}
-                resizeMode="contain"
-              />
-            ))}
-          </View>
-        </TouchableOpacity>
+          <CopilotStep
+            name="bigkasin-button"
+            order={5}
+            text="Ready na? Pindutin para bigkasin ang parirala."
+          >
+            <WalkthroughableView style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}>
+              {getWordImages("bigkasin", true).map((imageSrc, index) => (
+                <WalkthroughableImage
+                  key={index}
+                  source={imageSrc || ""}
+                  style={{
+                    height: 36,
+                    width: 36,
+                    marginHorizontal: 2,
+                    ...(index >= 0 && index <= 2 
+                      ? { marginLeft: -18 }
+                      : index >= 3 && index <= 5 ? { marginLeft: -12 }
+                      : index >= 5 ? { marginLeft: -16 }
+                      : {}
+                    )
+                  }}
+                  resizeMode="contain"
+                />
+              ))}
+            </WalkthroughableView>
+          </CopilotStep>
+        </WalkthroughableTouchableOpacity>
       </View>
     </View>
   );

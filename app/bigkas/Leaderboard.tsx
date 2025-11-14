@@ -1,7 +1,7 @@
 import { useState, useEffect, memo, useRef } from 'react';
 import { View, Text, Image, ActivityIndicator, StyleSheet, FlatList } from 'react-native';
-import { database, dbRef, onValue, off } from '../../firebase/firebase';
-import { imageSrc } from '../../Icons/icons';
+import { database, dbRef, onValue } from '@/firebase/firebase';
+import { imageSrc } from '@/Icons/icons';
 import { useBigkasContext } from '@/hooks/bigkasContext';
 import { useAuth } from '@/hooks/authContext';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,7 +13,7 @@ interface LeaderboardEntry {
   gradeLevel: string | null;
   levelNumber: number;
   mode: string;
-  totalScore: number;
+  totalScore: number | { operand: number };
   totalWords: number;
   correctWords: number;
   accuracy: number;
@@ -36,13 +36,9 @@ const Leaderboard = memo(() => {
         const entriesArray = Object.values(data) as LeaderboardEntry[];
         let filteredEntries = entriesArray;
         filteredEntries.sort((a, b) => {
-          if (b.totalScore !== a.totalScore) {
-            return b.totalScore - a.totalScore;
-          }
-          if (b.accuracy !== a.accuracy) {
-            return b.accuracy - a.accuracy;
-          }
-          return a.completedAt - b.completedAt;
+          const scoreA = typeof a.totalScore === 'object' ? a.totalScore?.operand || 0 : a.totalScore || 0;
+          const scoreB = typeof b.totalScore === 'object' ? b.totalScore?.operand || 0 : b.totalScore || 0;
+          return scoreB - scoreA;
         });
         setEntries(filteredEntries);
       } else {
@@ -54,7 +50,7 @@ const Leaderboard = memo(() => {
       setLoading(false);
     });
     return () => {
-      off(leaderboardRef, 'value', unsubscribe);
+      unsubscribe();
     };
   }, [bigkasResults?.bigkasId, bigkasResults?.levelNumber, bigkasResults?.mode]);
 
@@ -81,6 +77,7 @@ const Leaderboard = memo(() => {
           index: userIndex,
           animated: true,
           viewPosition: 0.5,
+          viewOffset: 0,
         });
       }, 300);
     }
@@ -130,14 +127,14 @@ const Leaderboard = memo(() => {
           >
             <View style={styles.rankSection}>
               {index + 1 <= 3 && getRankIcon(index + 1) ? (
-                <Image source={getRankIcon(index + 1)} style={styles.rankIcon} />
+                <Image source={getRankIcon(index + 1)} style={styles.rankIcon} resizeMode='contain' />
               ) : (
                 <Text style={styles.rankText}>#{index + 1}</Text>
               )}
             </View>
             <View style={styles.userSection}>
               {entry.photoURL ? (
-                <Image source={{ uri: entry.photoURL }} style={styles.avatar} />
+                <Image source={{ uri: entry.photoURL }} style={styles.avatar} resizeMode='cover' />
               ) : (
                 <View style={styles.avatarPlaceholder}>
                   <Text style={styles.avatarInitial}>
@@ -263,7 +260,6 @@ const styles = StyleSheet.create({
   rankIcon: {
     height: 56,
     width: 56,
-    resizeMode: "contain",
   },
   rankText: {
     fontSize: 20,
@@ -283,7 +279,6 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 8,
-    resizeMode: "cover",
     backgroundColor: "#eee",
   },
   avatarPlaceholder: {

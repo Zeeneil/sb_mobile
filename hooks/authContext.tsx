@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, Dispatch, SetStateAction } from "react";
-import { auth } from '@/firebase/firebase';
-import { GoogleAuthProvider, User } from 'firebase/auth';
+import { auth, FirebaseAuthTypes, GoogleAuthProvider } from '@/firebase/firebase';
 import { createUserDocumentfromAuth, onAuthStateChange } from '@/firebase/auth';
 import { loadingDot } from "@/Icons/icons";
 
@@ -10,8 +9,8 @@ interface AuthContextType {
   isEmailUser: boolean;
   isGoogleUser: boolean;
   isAppleUser: boolean;
-  currentUser: User | null;
-  setCurrentUser: Dispatch<SetStateAction<User | null>>;
+  currentUser: FirebaseAuthTypes.User | null;
+  setCurrentUser: Dispatch<SetStateAction<FirebaseAuthTypes.User | null>>;
   role: string | null;
   gradeLevels: string[] | null;
   gradeLevel: string | null;
@@ -26,7 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider=({ children }: { children: ReactNode }) => {
   // State variables to manage user authentication and roles
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [role, setRole] = useState<string | null>(null);
   const [gradeLevels, setGradeLevels] = useState<string[] | null>(null);
   const [gradeLevel, setGradeLevel] = useState<string | null>(null);
@@ -43,7 +42,7 @@ export const AuthProvider=({ children }: { children: ReactNode }) => {
   }, []);
 
   // Function to initialize user state and fetch additional data
-  async function initializeUser(user: User | null) {
+  async function initializeUser(user: FirebaseAuthTypes.User | null) {
     try {
       if (user) {
         setCurrentUser(user); // Set the current user

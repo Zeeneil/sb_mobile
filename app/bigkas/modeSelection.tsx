@@ -155,6 +155,7 @@ const ModeSelection = memo(() => {
                 !mode.isUnlocked ? styles.levelLocked : {},
                 mode.isCompleted && hoveredIndex === idx ? styles.levelLocked : {},
               ]}
+              resizeMode='contain'
             />
             <TouchableOpacity
               disabled={state.isLoading || !mode.isUnlocked}
@@ -180,14 +181,15 @@ const ModeSelection = memo(() => {
                       opacity: (mode.isCompleted && hoveredIndex === idx) || !mode.isUnlocked ? 0.3 : 1,
                       marginHorizontal: 2,
                     }}
+                    resizeMode='contain'
                   />
                 ))}
               </View>
               {!mode.isUnlocked && (
-                <Image source={imageSrc.locked} style={styles.lockIcon} />
+                <Image source={imageSrc.locked} style={styles.lockIcon} resizeMode='contain' />
               )}
               {mode.isCompleted && (
-                <Image source={imageSrc.check} style={styles.checkIcon} />
+                <Image source={imageSrc.check} style={styles.checkIcon} resizeMode='contain' />
               )}
             </TouchableOpacity>
             {mode.isCompleted && mode.isUnlocked && hoveredIndex === idx && (
@@ -197,7 +199,7 @@ const ModeSelection = memo(() => {
                   onPress={() => handlePlayAgain(mode)}
                   style={styles.playAgainButton}
                 >
-                  <Image source={imageSrc.settings} style={{ width: 60, height: 60 }} />
+                  <Image source={imageSrc.settings} style={{ width: 60, height: 60 }} resizeMode='contain' />
                 </TouchableOpacity>
               </View>
             )}
@@ -253,7 +255,6 @@ const styles = StyleSheet.create({
   levelBlackboard: {
     width: 220,
     height: 160,
-    resizeMode: 'contain',
     position: 'relative',
   },
   levelButton: {

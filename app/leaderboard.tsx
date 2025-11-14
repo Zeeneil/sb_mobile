@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useRef, useState } from 'react'
 import { useFocusEffect } from '@react-navigation/native';
-import { database, dbRef, onValue, off } from '@/firebase/firebase';
+import { database, dbRef, onValue } from '@/firebase/firebase';
 import { View, Text, Image, FlatList } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useAuth } from '@/hooks/authContext';
@@ -20,7 +20,7 @@ interface LeaderboardEntry {
     gradeLevel: string | null;
     quizTaken: number;
     seatworkTaken: number;
-    totalScore: number;
+    totalScore: number | { operand: number };
     updatedAt: number;
 }
 
@@ -48,8 +48,9 @@ const Leaderboard = memo(() => {
                 const entriesArray = Object.values(data) as LeaderboardEntry[];
                 let filteredEntries = entriesArray;
                 filteredEntries.sort((a, b) => {
-                    b.totalScore !== a.totalScore
-                    return b.totalScore - a.totalScore;
+                    const scoreA = typeof a.totalScore === 'object' ? a.totalScore?.operand || 0 : a.totalScore || 0;
+                    const scoreB = typeof b.totalScore === 'object' ? b.totalScore?.operand || 0 : b.totalScore || 0;
+                    return scoreB - scoreA;
                 });
                 setEntries(filteredEntries);
             } else {
@@ -61,7 +62,7 @@ const Leaderboard = memo(() => {
             setLoading(false);
         });
         return () => {
-            off(leaderboardRef, 'value', unsubscribe);
+            unsubscribe();
         };
     }, [mode, gradeLevel, refresh]);
 
@@ -85,6 +86,7 @@ const Leaderboard = memo(() => {
                     index: userRank - 1,
                     animated: true,
                     viewPosition: 0.5,
+                    viewOffset: 0,
                 });
             }, 300);
         }
@@ -104,11 +106,15 @@ const Leaderboard = memo(() => {
                 <View style={{ alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
                     <LeaderboardText size={32} />
                 </View>
-                <View style={{ flex: 1, backgroundColor: '#003311', borderRadius: 40, borderColor: '#8a3903', borderWidth: 8, padding: 24 }}>
+                <View style={{ flex: 1, backgroundColor: '#003311', borderRadius: 40, borderColor: '#8a3903', borderWidth: 8, padding: 18 }}>
                     {entriesLength && (
                         <>
-                            <Text style={{ fontSize: 24, fontWeight: '900', color: '#fff', marginBottom: 8, textAlign: 'center' }}>
-                                {userRank > 0 && <>You're in <Text style={{ color: '#FFD700' }}>{userRank}{userRank === 1 ? 'st' : userRank === 2 ? 'nd' : userRank === 3 ? 'rd' : 'th'} place</Text></>}
+                            <Text style={{ fontSize: 24, fontWeight: '900', color: '#fff', marginBottom: 12, textAlign: 'center' }}>
+                                {userRank > 0 ? (
+                                    <>You're in <Text style={{ color: '#FFD700' }}>{userRank}{userRank === 1 ? 'st' : userRank === 2 ? 'nd' : userRank === 3 ? 'rd' : 'th'} place</Text></>
+                                ) : (
+                                    <>You are not ranked yet. Play to get a rank!</>
+                                )}
                             </Text>
                             <View style={{ flexDirection: 'row', backgroundColor: 'rgba(255, 255, 255, 0.2)', paddingHorizontal: 4, paddingVertical: 8, borderRadius: 8, marginBottom: 8 }}>
                                 <View style={{ flex: 1, alignItems: 'center', flexDirection: 'row', gap: 8 }}>
@@ -128,7 +134,12 @@ const Leaderboard = memo(() => {
                         showsVerticalScrollIndicator={false}
                         refreshing={loading}
                         onRefresh={() => setRefresh(!refresh)}
-                        contentContainerStyle={{ flex: entriesLength ? 0 : 1, justifyContent: 'center' }}
+                        contentContainerStyle={{ 
+                            flex: entriesLength ? 0 : 1, 
+                            justifyContent: 'center', 
+                            gap: 8,
+                            paddingBottom: entriesLength ? 40 : 0,
+                        }}
                         getItemLayout={(_, index) => ({
                             length: 72,
                             offset: 72 * index,
@@ -146,7 +157,7 @@ const Leaderboard = memo(() => {
                                         borderWidth: isCurrentUser ? 4 : 2,
                                         borderColor: isCurrentUser ? '#FFA600' : '#ccc',
                                         backgroundColor: isCurrentUser ? '#ffee8c' : '#f9fafb',
-                                        borderRadius: isCurrentUser ? 8 : 0,
+                                        borderRadius: 8,
                                         shadowColor: "#FFA600",
                                         shadowOpacity: 0.2,
                                         shadowRadius: 4,

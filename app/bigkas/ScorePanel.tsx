@@ -2,6 +2,7 @@ import { memo, useRef, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, Animated } from 'react-native';
 import { imageSrc } from '../../Icons/icons';
 import { getNumberImages, getStarImages } from '../../utils/helpers';
+import { CopilotStep, walkthroughable } from 'react-native-copilot';
 
 interface ScorePanelProps {
   mode: string;
@@ -14,12 +15,16 @@ interface ScorePanelProps {
   userTotalWords: number;
 }
 
+const WalkthroughableView = walkthroughable(View);
+const WalkthroughableText = walkthroughable(Text);
+const WalkthroughableImage = walkthroughable(Image);
+
 const ScorePanel = memo(({ mode, phrases, totalPoints, totalWords, showPopup, isActive, userTotalPoints, userTotalWords }: ScorePanelProps) => {
   const latestEarnedPoints = phrases?.length > 0 ? (phrases.slice().reverse().find(p => p.isContinue === true && p.userPoints > 0)?.userPoints || 0) : 0;
 
   const renderNumberImages = (num: number, size = 50) => (
     getNumberImages(num)?.map((img, idx) => (
-      <Image key={idx} source={img} style={{ height: size, width: size * 0.7, resizeMode: 'contain' }} />
+      <Image key={idx} source={img} style={{ height: size, width: size * 0.7 }} resizeMode='contain' />
     ))
   );
 
@@ -43,32 +48,44 @@ const ScorePanel = memo(({ mode, phrases, totalPoints, totalWords, showPopup, is
 
   return (
     <View style={styles.root}>
-      <View style={styles.topSection}>
+      <WalkthroughableView style={styles.topSection}>
         {/* Stars */}
         <View style={styles.starsRow}>
           {getStarImages(mode).map((img, idx) => (
-            <Image key={idx} source={img} style={styles.starIcon} />
+            <Image key={idx} source={img} style={styles.starIcon} resizeMode='contain' />
           ))}
         </View>
         {/* Total Points */}
-        <View style={styles.pointsSection}>
-          <Text style={styles.label}>Puntos</Text>
-          <View style={styles.pointsRow}>
-            {renderNumberImages(userTotalPoints, 30)}
-            <Image source={imageSrc.slash} style={styles.slashIcon} />
-            {renderNumberImages(totalPoints, 30)}
-          </View>
-        </View>
+        <CopilotStep
+          name="scorepanel-points"
+          order={6}
+          text="Dito mo makikita ang iyong puntos."
+        >
+          <WalkthroughableView style={styles.pointsSection}>
+            <WalkthroughableText style={styles.label}>Puntos</WalkthroughableText>
+            <WalkthroughableView style={styles.pointsRow}>
+              {renderNumberImages(userTotalPoints, 30)}
+              <WalkthroughableImage source={imageSrc.slash} style={styles.slashIcon} resizeMode='contain' />
+              {renderNumberImages(totalPoints, 30)}
+            </WalkthroughableView>
+          </WalkthroughableView>
+        </CopilotStep>
         {/* Total Words */}
-        <View style={styles.wordsSection}>
-          <Text style={styles.label}>Mga tamang salita</Text>
-          <View style={styles.wordsRow}>
-            {renderNumberImages(userTotalWords, 30)}
-            <Image source={imageSrc.slash} style={styles.slashSmallIcon} />
-            {renderNumberImages(totalWords, 30)}
-          </View>
-        </View>
-      </View>
+        <CopilotStep
+          name="scorepanel-words"
+          order={7}
+          text="Tingnan kung ilang salita ang nakuha mo nang tama."
+        >
+          <WalkthroughableView style={styles.wordsSection}>
+            <WalkthroughableText style={styles.label}>Mga tamang salita</WalkthroughableText>
+            <WalkthroughableView style={styles.wordsRow}>
+              {renderNumberImages(userTotalWords, 30)}
+              <WalkthroughableImage source={imageSrc.slash} style={styles.slashSmallIcon} resizeMode='contain' />
+              {renderNumberImages(totalWords, 30)}
+            </WalkthroughableView>
+          </WalkthroughableView>
+        </CopilotStep>
+      </WalkthroughableView>
       {/* Popup Score */}
       <Animated.View
         style={[
@@ -89,7 +106,7 @@ const ScorePanel = memo(({ mode, phrases, totalPoints, totalWords, showPopup, is
       >
         {showPopup && (
           <View style={styles.popupRow}>
-            <Image source={imageSrc.plus} style={styles.plusIcon} />
+            <Image source={imageSrc.plus} style={styles.plusIcon} resizeMode='contain' />
             {renderNumberImages(latestEarnedPoints, 60)}
           </View>
         )}
@@ -97,6 +114,7 @@ const ScorePanel = memo(({ mode, phrases, totalPoints, totalWords, showPopup, is
       <Image
         source={isActive ? imageSrc.happyRobot : imageSrc.angryRobot}
         style={styles.characterIcon}
+        resizeMode='contain'
       />
     </View>
   );
@@ -111,6 +129,7 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingHorizontal: 8,
     paddingTop: 24,
+    zIndex: 5,
   },
   topSection: {
     width: '100%',
@@ -128,7 +147,6 @@ const styles = StyleSheet.create({
   starIcon: {
     height: 40,
     width: 40,
-    resizeMode: 'contain',
     marginHorizontal: 2,
   },
   pointsSection: {
@@ -152,7 +170,6 @@ const styles = StyleSheet.create({
     height: 30,
     width: 24,
     marginHorizontal: 8,
-    resizeMode: 'contain',
   },
   wordsSection: {
     width: '100%',
@@ -169,7 +186,6 @@ const styles = StyleSheet.create({
     height: 40,
     width: 18,
     marginHorizontal: 8,
-    resizeMode: 'contain',
   },
   popup: {
     width: '100%',
@@ -192,13 +208,11 @@ const styles = StyleSheet.create({
   plusIcon: {
     height: 40,
     width: 40,
-    resizeMode: 'contain',
     marginRight: 8,
   },
   characterIcon: {
     height: 140,
     width: 140,
-    resizeMode: 'contain',
   },
 });
 

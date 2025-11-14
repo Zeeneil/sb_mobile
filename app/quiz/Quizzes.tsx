@@ -81,7 +81,7 @@ const Quizzes = memo(() => {
               style={styles.yunitPrevButton}
               onPress={handlePrevYunit}
             >
-              <Image source={imageSrc.lessThan} style={{ width: 35, height: 35 }} />
+              <Image source={imageSrc.lessThan} style={{ width: 35, height: 35 }} resizeMode='contain' />
             </TouchableOpacity>
             <YunitText yunitNumber={currentYunit.yunitNumber} />
             <TouchableOpacity
@@ -89,7 +89,7 @@ const Quizzes = memo(() => {
               style={styles.yunitNextButton}
               onPress={handleNextYunit}
             >
-              <Image source={imageSrc.greaterThan} style={{ width: 35, height: 35 }} />
+              <Image source={imageSrc.greaterThan} style={{ width: 35, height: 35 }} resizeMode='contain' />
             </TouchableOpacity>
           </View>
         )
@@ -124,7 +124,7 @@ const Quizzes = memo(() => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.quizzesGrid}
             >
-              {currentLesson?.quizzes && currentLesson.quizzes.length > 0 && <Image source={imageSrc.lessThan} style={{ width: 28, height: 28 }} />}
+              {currentLesson?.quizzes && currentLesson.quizzes.length > 0 && <Image source={imageSrc.lessThan} style={{ width: 28, height: 28 }} resizeMode='contain' />}
               {currentLesson?.quizzes && currentLesson.quizzes.length > 0 ? (
                 currentLesson?.quizzes?.map((quiz: any, index: number) => {
                   const unlocked = currentLesson.isUnlocked && (index === 0 || currentLesson.quizzes[index - 1]?.response);
@@ -133,6 +133,7 @@ const Quizzes = memo(() => {
                       <Image
                         source={imageSrc.blackboardLevel}
                         style={[styles.quizBlackboard, !unlocked && styles.quizLocked]}
+                        resizeMode='contain'
                       />
                       <TouchableOpacity
                         disabled={!unlocked}
@@ -151,10 +152,10 @@ const Quizzes = memo(() => {
                           {quiz.category}
                         </Text>
                         {!unlocked && (
-                          <Image source={imageSrc.locked} style={styles.lockIcon} />
+                          <Image source={imageSrc.locked} style={styles.lockIcon} resizeMode='contain' />
                         )}
                         {quiz.response && (
-                          <Image source={imageSrc.check} style={styles.checkIcon} />
+                          <Image source={imageSrc.check} style={styles.checkIcon} resizeMode='contain' />
                         )}
                       </TouchableOpacity>
                     </View>
@@ -165,7 +166,7 @@ const Quizzes = memo(() => {
                   <Text style={styles.noQuizzesText}>Walang nakuhang pagsusulit</Text>
                 </View>
               )}
-              {currentLesson?.quizzes && currentLesson.quizzes.length > 0 && <Image source={imageSrc.greaterThan} style={{ width: 28, height: 28 }} />}
+              {currentLesson?.quizzes && currentLesson.quizzes.length > 0 && <Image source={imageSrc.greaterThan} style={{ width: 28, height: 28 }} resizeMode='contain'/>}
             </ScrollView>
           </GestureDetector>
         </ScrollView>
@@ -248,7 +249,6 @@ const styles = StyleSheet.create({
   quizBlackboard: {
     width: 220,
     height: 160,
-    resizeMode: 'contain',
     position: 'relative',
   },
   quizButton: {
@@ -280,7 +280,6 @@ const styles = StyleSheet.create({
   lockIcon: {
     width: 60,
     height: 60,
-    resizeMode: 'contain',
     position: 'absolute',
     top: '50%',
     left: '50%',

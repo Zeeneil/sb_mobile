@@ -1,11 +1,10 @@
-import { auth, database, dbRef, get, onValue } from "../firebase/firebase";
+import { auth, database, dbRef, get, onValue, runTransaction, update } from "../firebase/firebase";
 import { doGetCurrentMonthActivities, doGenerateElevenLabsSpeech, doSetUserStatus } from "../api/functions";
 import { imageSrc } from "../Icons/icons";
 import { AudioJob } from "@/hooks/useAudioQueue";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { GoogleSignin, User } from "@react-native-google-signin/google-signin";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { useRouter } from "expo-router";
-
 /**
  * Hides the scrollbar of a target element if there's no user action for `timeout` ms.
  * Shows the scrollbar again on user interaction.
@@ -302,31 +301,31 @@ export function paginateMembers<T>(items: T[], page: number, perPage: number) {
 };
 
 const letterAudioMap: Record<string, number> = {
-  a: require("../assets/ALPHABETS/audioA/A.mp3"),
-  b: require("../assets/ALPHABETS/audioB/B.mp3"),
-  c: require("../assets/ALPHABETS/audioC/C.mp3"),
-  d: require("../assets/ALPHABETS/audioD/D.mp3"),
-  e: require("../assets/ALPHABETS/audioE/E.mp3"),
-  f: require("../assets/ALPHABETS/audioF/F.mp3"),
-  g: require("../assets/ALPHABETS/audioG/G.mp3"),
-  h: require("../assets/ALPHABETS/audioH/H.mp3"),
-  i: require("../assets/ALPHABETS/audioI/I.mp3"),
-  j: require("../assets/ALPHABETS/audioJ/J.mp3"),
-  k: require("../assets/ALPHABETS/audioK/K.mp3"),
-  m: require("../assets/ALPHABETS/audioM/M.mp3"),
-  n: require("../assets/ALPHABETS/audioN/N.mp3"),
-  ng: require("../assets/ALPHABETS/audioNG/NG.mp3"),
-  o: require("../assets/ALPHABETS/audioO/O.mp3"),
-  p: require("../assets/ALPHABETS/audioP/P.mp3"),
-  q: require("../assets/ALPHABETS/audioQ/Q.mp3"),
-  r: require("../assets/ALPHABETS/audioR/R.mp3"),
-  s: require("../assets/ALPHABETS/audioS/S.mp3"),
-  t: require("../assets/ALPHABETS/audioT/T.mp3"),
-  u: require("../assets/ALPHABETS/audioU/U.mp3"),
-  v: require("../assets/ALPHABETS/audioV/V.mp3"),
-  w: require("../assets/ALPHABETS/audioW/W.mp3"),
-  x: require("../assets/ALPHABETS/audioX/X.mp3"),
-  y: require("../assets/ALPHABETS/audioY/Y.mp3"),
+  a: require("@/assets/ALPHABETS/audioA/A.mp3"),
+  b: require("@/assets/ALPHABETS/audioB/B.mp3"),
+  c: require("@/assets/ALPHABETS/audioC/C.mp3"),
+  d: require("@/assets/ALPHABETS/audioD/D.mp3"),
+  e: require("@/assets/ALPHABETS/audioE/E.mp3"),
+  f: require("@/assets/ALPHABETS/audioF/F.mp3"),
+  g: require("@/assets/ALPHABETS/audioG/G.mp3"),
+  h: require("@/assets/ALPHABETS/audioH/H.mp3"),
+  i: require("@/assets/ALPHABETS/audioI/I.mp3"),
+  j: require("@/assets/ALPHABETS/audioJ/J.mp3"),
+  k: require("@/assets/ALPHABETS/audioK/K.mp3"),
+  m: require("@/assets/ALPHABETS/audioM/M.mp3"),
+  n: require("@/assets/ALPHABETS/audioN/N.mp3"),
+  ng: require("@/assets/ALPHABETS/audioNG/NG.mp3"),
+  o: require("@/assets/ALPHABETS/audioO/O.mp3"),
+  p: require("@/assets/ALPHABETS/audioP/P.mp3"),
+  q: require("@/assets/ALPHABETS/audioQ/Q.mp3"),
+  r: require("@/assets/ALPHABETS/audioR/R.mp3"),
+  s: require("@/assets/ALPHABETS/audioS/S.mp3"),
+  t: require("@/assets/ALPHABETS/audioT/T.mp3"),
+  u: require("@/assets/ALPHABETS/audioU/U.mp3"),
+  v: require("@/assets/ALPHABETS/audioV/V.mp3"),
+  w: require("@/assets/ALPHABETS/audioW/W.mp3"),
+  x: require("@/assets/ALPHABETS/audioX/X.mp3"),
+  y: require("@/assets/ALPHABETS/audioY/Y.mp3"),
 };
 
 const TTS_CACHE_KEY = "tts_cache";
@@ -397,6 +396,26 @@ export const buildJobsFromText = (text: string, speed: number): AudioJob[] => {
     }
   }
   return jobs;
+};
+
+export const stepAudios: Record<string, any> = {
+  bigkasStep1: require("@/assets/steps/bigkasStep1.mp3"),
+  bigkasStep2: require("@/assets/steps/bigkasStep2.mp3"),
+  bigkasStep3: require("@/assets/steps/bigkasStep3.mp3"),
+  bigkasStep4: require("@/assets/steps/bigkasStep4.mp3"),
+  bigkasStep5: require("@/assets/steps/bigkasStep5.mp3"),
+  bigkasStep6: require("@/assets/steps/bigkasStep6.mp3"),
+  bigkasStep7: require("@/assets/steps/bigkasStep7.mp3"),
+};
+
+export const quizStepAudios: Record<string, any> = {
+  quizStep1: require("@/assets/steps/quizStep1.mp3"),
+  quizStep2: require("@/assets/steps/quizStep2.mp3"),
+  quizStep3: require("@/assets/steps/quizStep3.mp3"),
+  quizStep4: require("@/assets/steps/quizStep4.mp3"),
+  quizStep5: require("@/assets/steps/quizStep5.mp3"),
+  quizStep6: require("@/assets/steps/quizStep6.mp3"),
+  quizStep7: require("@/assets/steps/quizStep7.mp3"),
 };
 
 export const urlToFile = async (url: string, filename: string, mimeType: string): Promise<File> => {
@@ -933,3 +952,109 @@ export const checkAllBadges = ({
 
   return earned;
 };
+
+export const computeBadgeProgress = ({
+  mode, // 'quiz' | 'seatwork'
+  totalScore,
+  totalScorePossible,
+  memoizedQuestions,
+  questionResults,
+  answers,
+  selected, // selectedQuiz or selectedSeatwork
+  history,  // getUserHistory(...), see below
+  calculateScoreForQuestion,
+}: {
+  mode: 'quiz' | 'seatwork';
+  totalScore: number;
+  totalScorePossible: number;
+  memoizedQuestions: any[];
+  questionResults: Array<{ correct: boolean; answerTime: number }>;
+  answers: any;
+  selected: any;
+  history: any[];
+  calculateScoreForQuestion: (qIdx: number, answers: any) => number;
+}) => {
+  const percentage = totalScorePossible > 0 ? totalScore / totalScorePossible : 0;
+  const totalQuestions = memoizedQuestions?.length || 0;
+
+  const correctWithin10 = questionResults.filter(
+    q => q.correct && q.answerTime <= 10_000
+  ).length;
+  const allCorrect = questionResults.every(q => q.correct);
+
+  // Minimal attempt count (can be refined if you store attempts per quiz/seatwork)
+  const attempts = 1;
+
+  const earnedBadges = checkAllBadges({
+    questionResults,
+    memoizedQuestions,
+    answers,
+    totalScore,
+    totalScorePossible,
+    selectedQuiz: selected,
+    attempts,
+    history,
+    calculateScoreForQuestion,
+  });
+
+  const progress = {
+    mode,
+    percentage,
+    totalQuestions,
+    correctWithin10,
+    allCorrect,
+    lessonId: selected?.lessonId || null,
+    yunitNumber: selected?.yunitNumber || null,
+    category: selected?.category || null,
+  };
+
+  return { progress, earnedBadges };
+};
+
+export const saveBadgeProgress = async (
+  uid: string,
+  {
+    mode,
+    progress,
+    earnedBadges,
+  }: { mode: 'quiz' | 'seatwork'; progress: any; earnedBadges: string[] }
+) => {
+  const userBadgesRef = dbRef(database, `users/${uid}/badges`);
+  const updates: Record<string, any> = {};
+
+  // Accumulate counters per mode
+  updates[`progress/${mode}/last`] = { ...progress, updatedAt: Date.now() };
+
+  // Maintain simple aggregates for streaks/high scores/topic master
+  // - High score streak (>= 80%)
+  const streakRef = dbRef(database, `users/${uid}/badges/aggregates/${mode}/highScoreStreak`);
+  await runTransaction(streakRef, (current) => {
+    const prev = typeof current === 'number' ? current : 0;
+    return progress.percentage >= 0.8 ? prev + 1 : 0;
+  });
+
+  // - Topic master per lesson (>= 90%)
+  if (progress.lessonId && progress.percentage >= 0.9) {
+    updates[`aggregates/${mode}/topicMaster/${progress.lessonId}`] = {
+      count: (progress?.count || 0) + 1,
+      updatedAt: Date.now(),
+    };
+  }
+
+  // Store earned badges set
+  if (Array.isArray(earnedBadges) && earnedBadges.length > 0) {
+    earnedBadges.forEach((id) => {
+      updates[`earned/${id}`] = true;
+    });
+  }
+
+  // Increment taken counters
+  const takenRef = dbRef(database, `users/${uid}/badges/aggregates/${mode}/taken`);
+  await runTransaction(takenRef, (current) => (typeof current === 'number' ? current + 1 : 1));
+
+  // Basic counts that are additive and do not require a transaction here
+  updates[`summary/lastUpdatedAt`] = Date.now();
+
+  await update(userBadgesRef, updates);
+};
+

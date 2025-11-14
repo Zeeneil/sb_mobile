@@ -81,7 +81,7 @@ const Seatworks = memo(() => {
               style={styles.yunitPrevButton}
               onPress={handlePrevYunit}
             >
-              <Image source={imageSrc.lessThan} style={{ width: 35, height: 35 }} />
+              <Image source={imageSrc.lessThan} style={{ width: 35, height: 35 }} resizeMode='contain' />
             </TouchableOpacity>
             <YunitText yunitNumber={currentYunit.yunitNumber} />
             <TouchableOpacity
@@ -89,7 +89,7 @@ const Seatworks = memo(() => {
               style={styles.yunitNextButton}
               onPress={handleNextYunit}
             >
-              <Image source={imageSrc.greaterThan} style={{ width: 35, height: 35 }} />
+              <Image source={imageSrc.greaterThan} style={{ width: 35, height: 35 }} resizeMode='contain' />
             </TouchableOpacity>
           </View>
         )
@@ -124,7 +124,7 @@ const Seatworks = memo(() => {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.seatworksGrid}
             >
-              {currentLesson?.seatworks && currentLesson.seatworks.length > 0 && <Image source={imageSrc.lessThan} style={{ width: 28, height: 28 }} />}
+              {currentLesson?.seatworks && currentLesson.seatworks.length > 0 && <Image source={imageSrc.lessThan} style={{ width: 28, height: 28 }} resizeMode='contain' />}
               {currentLesson?.seatworks && currentLesson.seatworks.length > 0 ? (
                 currentLesson?.seatworks?.map((seatwork: any, index: number) => {
                   const unlocked = currentLesson.isUnlocked && (index === 0 || currentLesson.seatworks[index - 1]?.response);
@@ -133,6 +133,7 @@ const Seatworks = memo(() => {
                       <Image
                         source={imageSrc.blackboardLevel}
                         style={[styles.seatworkBlackboard, !unlocked && styles.seatworkLocked]}
+                        resizeMode='contain'
                       />
                       <TouchableOpacity
                         disabled={!unlocked}
@@ -151,10 +152,10 @@ const Seatworks = memo(() => {
                           {seatwork.category}
                         </Text>
                         {!unlocked && (
-                          <Image source={imageSrc.locked} style={styles.lockIcon} />
+                          <Image source={imageSrc.locked} style={styles.lockIcon} resizeMode='contain' />
                         )}
                         {seatwork.response && (
-                          <Image source={imageSrc.check} style={styles.checkIcon} />
+                          <Image source={imageSrc.check} style={styles.checkIcon} resizeMode='contain' />
                         )}
                       </TouchableOpacity>
                     </View>
@@ -165,7 +166,7 @@ const Seatworks = memo(() => {
                   <Text style={styles.noSeatworksText}>Walang nakuhang gawain</Text>
                 </View>
               )}
-              {currentLesson?.seatworks && currentLesson.seatworks.length > 0 && <Image source={imageSrc.greaterThan} style={{ width: 28, height: 28 }} />}
+              {currentLesson?.seatworks && currentLesson.seatworks.length > 0 && <Image source={imageSrc.greaterThan} style={{ width: 28, height: 28 }} resizeMode='contain' />}
             </ScrollView>
           </GestureDetector>
         </ScrollView>
@@ -248,7 +249,6 @@ const styles = StyleSheet.create({
   seatworkBlackboard: {
     width: 220,
     height: 160,
-    resizeMode: 'contain',
     position: 'relative',
   },
   seatworkButton: {
@@ -280,7 +280,6 @@ const styles = StyleSheet.create({
   lockIcon: {
     width: 60,
     height: 60,
-    resizeMode: 'contain',
     position: 'absolute',
     top: '50%',
     left: '50%',

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, useWindowDimensions } from "react-native";
 import { GestureHandlerRootView, GestureDetector, Gesture } from "react-native-gesture-handler";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS, SharedValue } from "react-native-reanimated";
 import { FontAwesome6, MaterialIcons, Octicons } from "@expo/vector-icons";
+import { CopilotStep, walkthroughable } from "react-native-copilot";
 
 interface MultipleChoiceTypeProps {
     question: any;
@@ -13,7 +14,11 @@ interface MultipleChoiceTypeProps {
     renderSpeaker: () => ReactNode;
     setShowSpeed: (value: boolean) => void;
     showSpeed: boolean;
+    visible: boolean;
 }
+
+const WalkthroughableView = walkthroughable(View);
+const WalkthroughableText = walkthroughable(Text);
 
 const styles = StyleSheet.create({
     container: {
@@ -196,6 +201,7 @@ const MultipleChoiceType = memo(({
     renderSpeaker,
     setShowSpeed,
     showSpeed,
+    visible,
 }: MultipleChoiceTypeProps) => {
     const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
     const userAnswer = answers[question.id];
@@ -293,22 +299,36 @@ const MultipleChoiceType = memo(({
                         </Text>
                     </View>
                 ) : (
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                        {question.question && (
-                            <Text style={{
-                                fontSize: 14,
-                                fontWeight: '900',
-                                color: isAnswered
-                                    ? (userAnswer === question.numAnswer ? '#4ade80' : '#f87171')
-                                    : '#fff',
-                                textAlign: 'center',
-                                lineHeight: 26,
-                            }}>
-                                {question.question}
-                            </Text>
+                    <WalkthroughableView style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                        {(visible || question.question) && (
+                            <CopilotStep
+                                name="quiz-question"
+                                order={5}
+                                text="Makikita mo dito ang tanong na kailangan mong sagutin. Basahin ito nang mabuti!"
+                            >
+                                <WalkthroughableText style={{
+                                    fontSize: 14,
+                                    fontWeight: '900',
+                                    color: isAnswered
+                                        ? (userAnswer === question.numAnswer ? '#4ade80' : '#f87171')
+                                        : '#fff',
+                                    textAlign: 'center',
+                                    lineHeight: 26,
+                                }}>
+                                    {question.question}
+                                </WalkthroughableText>
+                            </CopilotStep>
                         )}
-                        {renderSpeaker()}
-                    </View>
+                        <CopilotStep
+                            name="quiz-question-speaker"
+                            order={7}
+                            text="Pindutin ito at pumili ng isang opsyon para marinig ang tanong. Makinig nang mabuti!"
+                        >
+                            <WalkthroughableView>
+                            {renderSpeaker()}
+                            </WalkthroughableView>
+                        </CopilotStep>
+                    </WalkthroughableView>
                 )}
             </Animated.View>
 

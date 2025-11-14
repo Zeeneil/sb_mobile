@@ -28,8 +28,8 @@ const GradeLevelPage=()=> {
                     style={{
                         width: 200,
                         height: 200,
-                        resizeMode: 'contain'
                     }}
+                    resizeMode='contain'
                 />
             </View>
             <View style={{ flex: 1 }}>

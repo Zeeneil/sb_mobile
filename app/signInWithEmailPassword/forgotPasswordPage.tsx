@@ -72,8 +72,8 @@ const ForgotPasswordPage=()=> {
                     style={{
                         width: 200,
                         height: 180,
-                        resizeMode: 'contain'
                     }}
+                    resizeMode='contain'
                 />
                 <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 }}>
                     <Text style={{ textAlign: 'center', fontSize: 28, fontWeight: '900', marginBottom: 16, color: '#fff' }}>Reset your password</Text>

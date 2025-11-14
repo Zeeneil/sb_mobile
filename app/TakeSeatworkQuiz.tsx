@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { View, Alert, TouchableOpacity, Image, useWindowDimensions } from "react-native";
-import { CreateAudioForJob, checkAllBadges, getClueLettersByGrade, getQuestionTimeByType, getSyllableClues, getUserHistory } from "../utils/helpers";
+import { View, TouchableOpacity, Image, useWindowDimensions } from "react-native";
+import { CreateAudioForJob, checkAllBadges, getClueLettersByGrade, getQuestionTimeByType, getSyllableClues, getUserHistory, quizStepAudios } from "@/utils/helpers";
 import useTimer from "./Timer/useTimer";
-import { usePartialScoring } from "../hooks/usePartialScoring";
-import useSpeedScoring from "../hooks/useSpeedScoring";
-import { doSubmitSeatworkorQuizAnswers } from "../api/functions";
-import { useAuth } from "../hooks/authContext";
-import QuestionWrapper from "../components/question_types/QuestionWrapper";
-import { useSeatworkQuizLogic } from "../hooks/useSeatworkQuizLogic";
-import QuizHeader from "../components/question_types/Header";
-import Characters from "../components/Characters";
-import { useQuizContext } from "../hooks/quizContext";
+import { usePartialScoring } from "@/hooks/usePartialScoring";
+import useSpeedScoring from "@/hooks/useSpeedScoring";
+import { doSubmitSeatworkorQuizAnswers } from "@/api/functions";
+import { useAuth } from "@/hooks/authContext";
+import QuestionWrapper from "@/components/question_types/QuestionWrapper";
+import { useSeatworkQuizLogic } from "@/hooks/useSeatworkQuizLogic";
+import QuizHeader from "@/components/question_types/Header";
+import Characters from "@/components/Characters";
+import { useQuizContext } from "@/hooks/quizContext";
 import {  useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
@@ -19,11 +19,13 @@ import { useQuizzesState } from "@/hooks/useQuizzesState";
 import { useSeatworkContext } from "@/hooks/seatworkContext";
 import { useSeatworksState } from "@/hooks/useSeatworksState";
 import { useClassContext } from "@/hooks/classContext";
-import useAudioQueue from "../hooks/useAudioQueue";
+import useAudioQueue from "@/hooks/useAudioQueue";
 import SelectCategoryModal from "@/components/question_types/SelectCategoryModal";
 import { imageSrc } from "@/Icons/icons";
 import { useLogRegContext } from "@/hooks/logRegContext";
 import { Toast } from "toastify-react-native";
+import { useCopilot } from "react-native-copilot";
+import { useStepAudio } from "@/hooks/useStepAudio";
 
 const takeSeatworkQuiz = () => {
   const router = useRouter();
@@ -75,12 +77,16 @@ const takeSeatworkQuiz = () => {
     Array<{ correct: boolean; answerTime: number }>
   >([]);
   const audioQueue = useAudioQueue(CreateAudioForJob);
+  const isTimerActiveRef = useRef(false);
+  const { start, currentStepNumber, visible } = useCopilot();
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
     if (currentQuestion) {
       setTimer(QUESTION_TIME);
       setQuestionAnswered(false);
       setQuestionStartTime(Date.now());
+      isTimerActiveRef.current = true;
     }
   }, [currentQuestionIndex, currentQuestion]);
 
@@ -104,6 +110,7 @@ const takeSeatworkQuiz = () => {
   const handleTimeUp = useCallback(() => {
     if (!questionAnswered) {
       setQuestionAnswered(true);
+      isTimerActiveRef.current = false;
       const accuracyScore = calculateScoreForQuestion(currentQuestionIndex, answersRef.current);
       const isCorrect = accuracyScore === 1;
       setQuestionResults((prev) => [
@@ -131,7 +138,7 @@ const takeSeatworkQuiz = () => {
 
   const { clearTimer } = useTimer({
     timer,
-    isActive: !questionAnswered && currentQuestion,
+    isActive: isTimerActiveRef.current && !questionAnswered && currentQuestion && !visible,
     onTick: () => setTimer((t) => t - 1),
     onTimeout: handleTimeUp,
   });
@@ -139,12 +146,14 @@ const takeSeatworkQuiz = () => {
   const handleNextQuestion = useCallback(() => {
     audioQueue.stop();
     clearTimer();
+    isTimerActiveRef.current = false;
     setCurrentQuestionIndex((prev) => prev + 1);
   }, [clearTimer, audioQueue]);
 
   const handleAnswer = useCallback((answers: any) => {
     if (questionAnswered) return;
     setQuestionAnswered(true);
+    isTimerActiveRef.current = false;
     const answerTime = Date.now() - questionStartTime;
     const accuracyScore = calculateScoreForQuestion(currentQuestionIndex, answers);
     const isCorrect = accuracyScore === 1;
@@ -216,6 +225,7 @@ const takeSeatworkQuiz = () => {
   const handleQuizComplete = useCallback(async () => {
     audioQueue.stop();
     clearTimer();
+    isTimerActiveRef.current = false;
     setIsSubmitting(true);
     setPendingShowResults(true);
     setShowLottie(true);
@@ -298,8 +308,112 @@ const takeSeatworkQuiz = () => {
   useEffect(() => {
     return () => {
       audioQueue.stop();
+      clearTimer();
+      isTimerActiveRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    const startTimer = setTimeout(() => {
+      if (!hasStartedRef.current) {
+        hasStartedRef.current = true;
+        start();
+      }
+    }, 0);
+    return () => {
+      clearTimeout(startTimer);
+    };
+  }, [start]);
+
+  useStepAudio({
+    visible,
+    currentStepNumber,
+    audioSources: quizStepAudios,
+    keyPrefix: 'quizStep',
+  });
+
+  const headerProps = useMemo(() => ({
+    question: currentQuestion,
+    cluePositions,
+    currentQuestionIndex,
+    totalQuestions: memoizedQuestions.length,
+    totalScore,
+    timer,
+    questionTime: QUESTION_TIME,
+    isAnswered: questionAnswered,
+    availableEnumerationItems,
+    onItemTap: handleEnumerationItemTap,
+    setOpenImage,
+    visible,
+  }), [
+    currentQuestion?.id,
+    cluePositions, 
+    currentQuestionIndex, 
+    memoizedQuestions.length, 
+    totalScore, 
+    timer, 
+    QUESTION_TIME, 
+    questionAnswered, 
+    availableEnumerationItems?.length, 
+    handleEnumerationItemTap,
+    visible,
+  ]);
+
+  const questionWrapperProps = useMemo(() => ({
+    question: currentQuestion,
+    answers: answersRef.current,
+    isAnswered: questionAnswered,
+    cluePositions,
+    availableOptions,
+    letterBank,
+    availableLetters,
+    onSlotTap: handleSlotTap,
+    getSlotStyle,
+    availableMatchingItems,
+    shuffledSyllableIndexes,
+    onOptionSelect: handleOptionSelect,
+    onLetterPlace: handleLetterPlace,
+    onEnumerationItemDrop: handleEnumerationItemDrop,
+    onEnumerationItemRemove: handleEnumerationItemRemove,
+    getItemStyle,
+    getCategoryStyle,
+    onMatchingItemMatch: handleMatchingItemMatch,
+    onMatchingItemRemove: handleMatchingItemRemove,
+    onMatchingItemSwap: handleMatchingItemSwap,
+    getMatchStyle,
+    onSyllableRemove: handleSyllableRemove,
+    onSyllableReorder: handleSyllableReorder,
+    getSyllableStyle,
+    audioQueue,
+    visible,
+  }), [
+    currentQuestion?.id,
+    questionAnswered,
+    cluePositions,
+    availableOptions,
+    letterBank,
+    availableLetters,
+    handleSlotTap,
+    getSlotStyle,
+    availableMatchingItems,
+    shuffledSyllableIndexes,
+    handleOptionSelect,
+    handleLetterPlace,
+    handleEnumerationItemDrop,
+    handleEnumerationItemRemove,
+    getItemStyle,
+    getCategoryStyle,
+    handleMatchingItemMatch,
+    handleMatchingItemRemove,
+    handleMatchingItemSwap,
+    getMatchStyle,
+    handleSyllableRemove,
+    handleSyllableReorder,
+    getSyllableStyle,
+    audioQueue,
+    start,
+    visible,
+  ]);
 
   return (
     <SafeAreaView style={{ 
@@ -308,47 +422,8 @@ const takeSeatworkQuiz = () => {
     }}>
       <StatusBar style="dark" />
       <View style={{ flex: 1 }}>
-        <QuizHeader
-          question={currentQuestion}
-          cluePositions={cluePositions}
-          currentQuestionIndex={currentQuestionIndex}
-          totalQuestions={memoizedQuestions.length}
-          totalScore={totalScore}
-          timer={timer}
-          questionTime={QUESTION_TIME}
-          isAnswered={questionAnswered}
-          availableEnumerationItems={availableEnumerationItems}
-          onItemTap={handleEnumerationItemTap}
-          setOpenImage={setOpenImage}
-        />
-        <QuestionWrapper
-          key={currentQuestion?.id}
-          question={currentQuestion}
-          answers={answersRef.current}
-          isAnswered={questionAnswered}
-          cluePositions={cluePositions}
-          availableOptions={availableOptions}
-          letterBank={letterBank}
-          availableLetters={availableLetters}
-          onSlotTap={handleSlotTap}
-          getSlotStyle={getSlotStyle}
-          availableMatchingItems={availableMatchingItems}
-          shuffledSyllableIndexes={shuffledSyllableIndexes}
-          onOptionSelect={handleOptionSelect}
-          onLetterPlace={handleLetterPlace}
-          onEnumerationItemDrop={handleEnumerationItemDrop}
-          onEnumerationItemRemove={handleEnumerationItemRemove}
-          getItemStyle={getItemStyle}
-          getCategoryStyle={getCategoryStyle}
-          onMatchingItemMatch={handleMatchingItemMatch}
-          onMatchingItemRemove={handleMatchingItemRemove}
-          onMatchingItemSwap={handleMatchingItemSwap}
-          getMatchStyle={getMatchStyle}
-          onSyllableRemove={handleSyllableRemove}
-          onSyllableReorder={handleSyllableReorder}
-          getSyllableStyle={getSyllableStyle}
-          audioQueue={audioQueue}
-        />
+        <QuizHeader {...headerProps} />
+        <QuestionWrapper key={currentQuestion?.id} {...questionWrapperProps} />
       </View>
       {openImage && currentQuestion?.image && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.7)', zIndex: 20 }}>

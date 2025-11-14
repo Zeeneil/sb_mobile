@@ -10,7 +10,8 @@ export const LeaderboardText = memo(({ size }: { size: number }) => {
                 <Image
                     key={index}
                     source={imageSrc || ""}
-                    style={{ width: size, height: size, resizeMode: 'contain', marginRight: -8 }}
+                    style={{ width: size, height: size, marginRight: -8 }}
+                    resizeMode='contain'
                 />
             ))}
         </View>
@@ -23,25 +24,25 @@ export const MyYunitText = memo(() => {
             <View style={{ flexDirection: 'row', backgroundColor: 'transparent'}}>
             {getWordImages(`my yunits`, true).map((imageSrc, index) => (
                 <Image
-                key={index}
-                source={imageSrc || ""}
-                style={{ 
-                    width: 24, 
-                    height: 24, 
-                    resizeMode: 'contain',
-                    marginLeft: 
-                    index > 0 && index <= 1 
-                        ? -4 
-                        : index > 1 && index <= 2 
-                        ? 4 
-                        : index > 2 && index <= 4
-                        ? -4
-                        : index > 4 && index <= 6
-                        ? -8
-                        : index > 6
-                        ? -6
-                        : 0 
-                }}
+                    key={index}
+                    source={imageSrc || ""}
+                    style={{ 
+                        width: 24, 
+                        height: 24, 
+                        marginLeft: 
+                        index > 0 && index <= 1 
+                            ? -4 
+                            : index > 1 && index <= 2 
+                            ? 4 
+                            : index > 2 && index <= 4
+                            ? -4
+                            : index > 4 && index <= 6
+                            ? -8
+                            : index > 6
+                            ? -6
+                            : 0 
+                    }}
+                    resizeMode='contain'
                 />
             ))}
             </View>
@@ -55,21 +56,21 @@ export const YunitText = memo(({ yunitNumber }: { yunitNumber: string }) => {
         <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'transparent' }}>
             {getWordImages(`Yunit ${yunitNumber}`, true).map((imageSrc, index) => (
                 <Image
-                  key={index}
-                  source={imageSrc || ""}
-                  style={{ 
-                    width: 28, 
-                    height: 28, 
-                    resizeMode: 'contain', 
-                    marginLeft: 
-                      index > 0 && index <= 2 
-                      ? -4 
-                      : index > 2 && index <= 4
-                      ? -10.5
-                      : index > 4
-                      ? 8
-                      : 0 
-                  }}
+                    key={index}
+                    source={imageSrc || ""}
+                    style={{ 
+                        width: 28, 
+                        height: 28, 
+                        marginLeft: 
+                        index > 0 && index <= 2 
+                        ? -4 
+                        : index > 2 && index <= 4
+                        ? -10.5
+                        : index > 4
+                        ? 8
+                        : 0 
+                    }}
+                    resizeMode='contain'
                 />
             ))}
         </View>
